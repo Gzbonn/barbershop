@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Fade & Blade">
+  <rect width="64" height="64" rx="12" fill="#0c0a09"/>
+  <circle cx="22" cy="42" r="8" fill="none" stroke="#d9a44e" stroke-width="3"/>
+  <circle cx="42" cy="42" r="8" fill="none" stroke="#d9a44e" stroke-width="3"/>
+  <path d="M28 37L48 13M36 37L16 13" fill="none" stroke="#f5e6c8" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="48" cy="13" r="3" fill="#d9a44e"/>
+  <circle cx="16" cy="13" r="3" fill="#d9a44e"/>
+</svg>

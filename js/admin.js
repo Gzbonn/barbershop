@@ -1,11 +1,13 @@
 /**
  * ==========================================================================
  * FADE & BLADE — Admin & Barber Management Portal
- * JavaScript Controller (js/admin.js)
+ * JavaScript controller (js/admin.js)
+ * Depends on js/core.js loaded first.
  * ==========================================================================
  */
 
-// ── Barber Accounts Definition ──────────────────────────────────────────────
+// Demo accounts. This is a front-end demo — real authentication requires a
+// server-side backend.
 const BARBERS = {
   '1': {
     id: '1',
@@ -45,143 +47,22 @@ const BARBERS = {
   }
 };
 
-// ── Default 12 Gallery Items Seed ───────────────────────────────────────────
-const DEFAULT_GALLERY = [
-  {
-    id: 1,
-    title: 'Zero Skin Fade & Textured Crop',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=900&q=80',
-    featured: true
-  },
-  {
-    id: 2,
-    title: 'Precision Beard Sculpting & Razor Edge',
-    category: 'beard',
-    categoryLabel: 'Beard Sculpt',
-    barber: 'Jake Thompson',
-    imageUrl: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 3,
-    title: 'Traditional Hot Towel Straight Razor Shave',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 4,
-    title: 'Modern Textured Pompadour',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 5,
-    title: 'Downtown Lounge Heritage Interior',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Fade & Blade',
-    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 6,
-    title: 'High Taper with Natural Waves',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 7,
-    title: 'Razor Sharp Lineup & Beard Gradient',
-    category: 'beard',
-    categoryLabel: 'Beard Sculpt',
-    barber: 'Jake Thompson',
-    imageUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 8,
-    title: 'Executive Scissor Crop & Side Part',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 9,
-    title: 'Geometric Hair Art & Bleached Contrast',
-    category: 'modern',
-    categoryLabel: 'Modern Art',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 10,
-    title: 'Mid Drop Fade with Textured Top',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 11,
-    title: 'Vintage Apothecary & Razor Station',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Fade & Blade',
-    imageUrl: 'https://images.unsplash.com/photo-1567894340315-735d7c361db0?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 12,
-    title: 'Precision Master Barber in Action',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  }
-];
-
-// Current logged in barber state
 let currentSession = null;
 let editingPhotoId = null;
+let lastFocusedAdminElement = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  ensureSeedData();
 
-  // Ensure default appointments and gallery are initialized in localStorage
-  initSeedData();
+  if (window.lucide) lucide.createIcons();
 
-  // Check existing session
   checkAuth();
 
-  // Form submit listener
   const loginForm = document.getElementById('loginForm');
-  if (loginForm) {
-    loginForm.addEventListener('submit', handleLoginSubmit);
-  }
+  if (loginForm) loginForm.addEventListener('submit', handleLoginSubmit);
 
-  // Navigation tab switcher
   initTabs();
 
-  // Filter change listeners
   const barberFilter = document.getElementById('barberFilter');
   const dateFilter = document.getElementById('dateFilter');
   const searchInput = document.getElementById('appointmentSearch');
@@ -189,73 +70,105 @@ document.addEventListener('DOMContentLoaded', () => {
   if (barberFilter) barberFilter.addEventListener('change', renderAppointmentsTable);
   if (dateFilter) dateFilter.addEventListener('change', renderAppointmentsTable);
   if (searchInput) searchInput.addEventListener('input', renderAppointmentsTable);
+
+  initDateDefaults();
+  initAdminModalBehavior();
+  initStorageSync();
 });
 
-// ── Authentication System ───────────────────────────────────────────────────
+/* ── Authentication ──────────────────────────────────────────────────────── */
+
+function toSession(barber) {
+  return {
+    id: barber.id,
+    username: barber.username,
+    name: barber.name,
+    role: barber.role,
+    specialty: barber.specialty,
+    avatar: barber.avatar
+  };
+}
+
 function checkAuth() {
-  const sessionStr = sessionStorage.getItem('fb_admin_session');
+  const sessionStr = sessionStorage.getItem(FB_KEYS.session);
   if (sessionStr) {
     try {
-      currentSession = JSON.parse(sessionStr);
-      showDashboard();
-      return;
-    } catch(e) {
-      sessionStorage.removeItem('fb_admin_session');
+      const parsed = JSON.parse(sessionStr);
+      if (parsed && parsed.id && parsed.name) {
+        currentSession = toSession(parsed);
+        sessionStorage.setItem(FB_KEYS.session, JSON.stringify(currentSession));
+        showDashboard();
+        return;
+      }
+    } catch (error) {
+      // Fall through to the login form.
     }
+    sessionStorage.removeItem(FB_KEYS.session);
   }
   showLoginForm();
 }
 
-function handleLoginSubmit(e) {
-  e.preventDefault();
+function handleLoginSubmit(event) {
+  event.preventDefault();
+
   const usernameInput = document.getElementById('username');
   const passwordInput = document.getElementById('password');
   const errorBox = document.getElementById('loginError');
 
-  const u = usernameInput.value.trim();
-  const p = passwordInput.value.trim();
+  const username = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+  const barber = BARBERS[username];
 
-  const barber = BARBERS[u];
-  if (barber && barber.password === p) {
+  if (barber && barber.password === password) {
     if (errorBox) errorBox.style.display = 'none';
-    currentSession = barber;
-    sessionStorage.setItem('fb_admin_session', JSON.stringify(barber));
+    currentSession = toSession(barber);
+    sessionStorage.setItem(FB_KEYS.session, JSON.stringify(currentSession));
     showDashboard();
-  } else {
-    if (errorBox) {
-      errorBox.textContent = 'Credențiale invalide. Folosește user 1, 2 sau 3 cu parola corespunzătoare.';
-      errorBox.style.display = 'block';
-    }
+  } else if (errorBox) {
+    errorBox.textContent = 'Credențiale invalide. Folosește user 1, 2, 3 sau admin, cu parola corespunzătoare.';
+    errorBox.style.display = 'block';
   }
 }
 
 function quickLogin(userId) {
   const barber = BARBERS[userId];
-  if (barber) {
-    document.getElementById('username').value = barber.username;
-    document.getElementById('password').value = barber.password;
-    currentSession = barber;
-    sessionStorage.setItem('fb_admin_session', JSON.stringify(barber));
-    showDashboard();
-  }
+  if (!barber) return;
+
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  if (usernameInput) usernameInput.value = barber.username;
+  if (passwordInput) passwordInput.value = barber.password;
+
+  currentSession = toSession(barber);
+  sessionStorage.setItem(FB_KEYS.session, JSON.stringify(currentSession));
+  showDashboard();
 }
 
 function logout() {
-  sessionStorage.removeItem('fb_admin_session');
+  sessionStorage.removeItem(FB_KEYS.session);
   currentSession = null;
   showLoginForm();
 }
 
 function showLoginForm() {
-  document.getElementById('loginView').style.display = 'flex';
-  document.getElementById('adminView').style.display = 'none';
+  const loginView = document.getElementById('loginView');
+  const adminView = document.getElementById('adminView');
+  if (loginView) loginView.style.display = 'flex';
+  if (adminView) adminView.style.display = 'none';
+  syncAdminBodyLock();
 }
 
 function showDashboard() {
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('adminView').style.display = 'flex';
+  if (!currentSession) {
+    showLoginForm();
+    return;
+  }
 
-  // Update profile header
+  const loginView = document.getElementById('loginView');
+  const adminView = document.getElementById('adminView');
+  if (loginView) loginView.style.display = 'none';
+  if (adminView) adminView.style.display = 'flex';
+
   const nameEl = document.getElementById('activeBarberName');
   const roleEl = document.getElementById('activeBarberRole');
   const avatarEl = document.getElementById('activeBarberAvatar');
@@ -265,196 +178,146 @@ function showDashboard() {
   if (roleEl) roleEl.textContent = currentSession.role;
   if (avatarEl) avatarEl.src = currentSession.avatar;
 
-  // Auto-filter by this barber if it's one of the 3 barbers
   if (filterSelect) {
-    if (currentSession.id !== 'admin') {
+    if (currentSession.id !== 'admin' && ALL_BARBERS.includes(currentSession.name)) {
       filterSelect.value = currentSession.name;
     } else {
       filterSelect.value = 'all';
     }
   }
 
-  // Refresh all dashboard views
   renderDashboardStats();
   renderAppointmentsTable();
   renderGalleryManager();
   renderBlockedSlots();
   renderServicesEditor();
 
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  if (window.lucide) lucide.createIcons();
 }
 
-// ── Tab Navigation ──────────────────────────────────────────────────────────
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+
 function initTabs() {
   const tabs = document.querySelectorAll('.nav-tab-btn');
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
+      tabs.forEach(other => other.classList.remove('active'));
       tab.classList.add('active');
 
       const targetId = tab.getAttribute('data-tab');
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
       const targetPane = document.getElementById(targetId);
       if (targetPane) targetPane.classList.add('active');
 
-      if (window.lucide) {
-        lucide.createIcons();
+      if (targetId === 'tabAppointments') {
+        renderDashboardStats();
+        renderAppointmentsTable();
+      } else if (targetId === 'tabGallery') {
+        renderGalleryManager();
+      } else if (targetId === 'tabSchedule') {
+        renderBlockedSlots();
+      } else if (targetId === 'tabServices') {
+        renderServicesEditor();
       }
+
+      if (window.lucide) lucide.createIcons();
     });
   });
 }
 
-// ── Seed Initial Data if empty ──────────────────────────────────────────────
-function initSeedData() {
-  // 1. Gallery
-  if (!localStorage.getItem('fb_gallery_items')) {
-    localStorage.setItem('fb_gallery_items', JSON.stringify(DEFAULT_GALLERY));
-  }
-
-  // 2. Appointments (Seed realistic bookings for testing)
-  if (!localStorage.getItem('fb_appointments')) {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-    const initialBookings = [
-      {
-        id: 1001,
-        code: 'FB-4102',
-        name: 'Victor Danilov',
-        phone: '(555) 345-9821',
-        email: 'victor@example.com',
-        service: 'Classic Haircut',
-        price: 35,
-        barber: 'Marcus Rivera',
-        date: today,
-        slot: '10:00 AM',
-        status: 'confirmed',
-        notes: 'Keep hair longer on crown, mid taper'
-      },
-      {
-        id: 1002,
-        code: 'FB-8821',
-        name: 'Stefan Popov',
-        phone: '(555) 789-1122',
-        email: 'stefan@example.com',
-        service: 'Beard Sculpting',
-        price: 25,
-        barber: 'Jake Thompson',
-        date: today,
-        slot: '01:00 PM',
-        status: 'confirmed',
-        notes: 'Beard line-up with sharp razor edge'
-      },
-      {
-        id: 1003,
-        code: 'FB-9310',
-        name: 'Mihai Cazacu',
-        phone: '(555) 654-7788',
-        email: 'mihai@example.com',
-        service: 'Signature Skin Fade',
-        price: 40,
-        barber: 'Marcus Rivera',
-        date: tomorrow,
-        slot: '10:00 AM',
-        status: 'confirmed',
-        notes: 'Zero foil skin fade'
-      },
-      {
-        id: 1004,
-        code: 'FB-6502',
-        name: 'Alexei Rusu',
-        phone: '(555) 432-8899',
-        email: 'alexei@example.com',
-        service: 'The Royal Treatment',
-        price: 85,
-        barber: 'D\'Angelo Brooks',
-        date: tomorrow,
-        slot: '03:00 PM',
-        status: 'confirmed',
-        notes: 'Full works before photo shoot'
-      }
-    ];
-
-    localStorage.setItem('fb_appointments', JSON.stringify(initialBookings));
-  }
-
-  // 3. Blocked Slots
-  if (!localStorage.getItem('fb_blocked_slots')) {
-    localStorage.setItem('fb_blocked_slots', JSON.stringify([]));
-  }
+function initDateDefaults() {
+  const today = getLocalISODate();
+  ['blockDate', 'walkInDate'].forEach(id => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.min = today;
+    if (!input.value) input.value = today;
+  });
 }
 
-// ── KPI Dashboard Stats ─────────────────────────────────────────────────────
+/* ── KPI stats ───────────────────────────────────────────────────────────── */
+
 function renderDashboardStats() {
+  if (!currentSession) return;
+
   const appointments = getStoredAppointments();
-  const today = new Date().toISOString().split('T')[0];
-
-  // Filter based on currently logged in barber
-  const relevantAppts = currentSession.id === 'admin'
+  const today = getLocalISODate();
+  const relevantAppointments = currentSession.id === 'admin'
     ? appointments
-    : appointments.filter(a => a.barber === currentSession.name);
+    : appointments.filter(appointment => appointment.barber === currentSession.name);
 
-  const todayAppts = relevantAppts.filter(a => a.date === today && a.status !== 'cancelled');
-  const todayRevenue = todayAppts.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-  const totalCompleted = relevantAppts.filter(a => a.status === 'completed').length;
-  const activeBookings = relevantAppts.filter(a => a.status === 'confirmed').length;
+  const todayAppointments = relevantAppointments.filter(appointment =>
+    appointment.date === today && appointment.status !== 'cancelled'
+  );
+  const todayRevenue = todayAppointments.reduce((sum, appointment) => sum + (Number(appointment.price) || 0), 0);
+  const activeBookings = relevantAppointments.filter(appointment =>
+    appointment.status === 'confirmed' && appointment.date >= today
+  ).length;
 
-  document.getElementById('statTodayCount').textContent = todayAppts.length;
-  document.getElementById('statTodayRevenue').textContent = `$${todayRevenue}`;
-  document.getElementById('statTotalClients').textContent = relevantAppts.length;
-  document.getElementById('statActiveBookings').textContent = activeBookings;
+  const uniqueClients = new Set(
+    relevantAppointments
+      .map(appointment => (appointment.phone || appointment.name || '').trim().toLowerCase())
+      .filter(Boolean)
+  ).size;
+
+  setText('statTodayCount', String(todayAppointments.length));
+  setText('statTodayRevenue', `$${todayRevenue}`);
+  setText('statTotalClients', String(uniqueClients));
+  setText('statActiveBookings', String(activeBookings));
 }
 
-// ── Appointments Management ─────────────────────────────────────────────────
-function getStoredAppointments() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_appointments') || '[]');
-  } catch(e) {
-    return [];
-  }
+function setText(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = value;
 }
+
+/* ── Appointments management ─────────────────────────────────────────────── */
 
 function saveStoredAppointments(list) {
-  localStorage.setItem('fb_appointments', JSON.stringify(list));
+  if (!setStoredAppointments(list)) {
+    alert('Programările nu au putut fi salvate în browser. Verifică spațiul disponibil.');
+    return false;
+  }
   renderDashboardStats();
   renderAppointmentsTable();
+  return true;
 }
 
 function renderAppointmentsTable() {
-  const appointments = getStoredAppointments();
-  const barberFilter = document.getElementById('barberFilter').value;
-  const dateFilter = document.getElementById('dateFilter').value;
-  const query = document.getElementById('appointmentSearch').value.toLowerCase().trim();
+  if (!currentSession) return;
 
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const barberFilterEl = document.getElementById('barberFilter');
+  const dateFilterEl = document.getElementById('dateFilter');
+  const searchInput = document.getElementById('appointmentSearch');
 
-  let filtered = appointments.filter(item => {
-    // Barber Filter
-    if (barberFilter !== 'all' && item.barber !== barberFilter) {
-      return false;
-    }
+  const barberFilter = barberFilterEl ? barberFilterEl.value : 'all';
+  const dateFilter = dateFilterEl ? dateFilterEl.value : 'all';
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-    // Date Filter
+  const today = getLocalISODate();
+  const tomorrow = shiftISODate(today, 1);
+
+  const filtered = getStoredAppointments().filter(item => {
+    if (barberFilter !== 'all' && item.barber !== barberFilter) return false;
     if (dateFilter === 'today' && item.date !== today) return false;
     if (dateFilter === 'tomorrow' && item.date !== tomorrow) return false;
 
-    // Search query
     if (query) {
-      const matchName = item.name && item.name.toLowerCase().includes(query);
-      const matchCode = item.code && item.code.toLowerCase().includes(query);
-      const matchPhone = item.phone && item.phone.toLowerCase().includes(query);
-      const matchService = item.service && item.service.toLowerCase().includes(query);
-      if (!matchName && !matchCode && !matchPhone && !matchService) return false;
+      const haystack = [
+        item.name,
+        item.code,
+        item.phone,
+        item.email,
+        item.service,
+        item.barber
+      ].filter(Boolean).join(' ').toLowerCase();
+      if (!haystack.includes(query)) return false;
     }
 
     return true;
   });
 
-  // Sort by date and slot
-  filtered.sort((a, b) => new Date(`${a.date} ${a.slot}`) - new Date(`${b.date} ${b.slot}`));
+  filtered.sort((a, b) => appointmentSortKey(a).localeCompare(appointmentSortKey(b)));
 
   const tbody = document.getElementById('appointmentsTbody');
   if (!tbody) return;
@@ -466,171 +329,234 @@ function renderAppointmentsTable() {
           <i data-lucide="calendar-x" style="width:36px;height:36px;margin-bottom:12px;opacity:0.5"></i>
           <p>Nu a fost găsită nicio programare pentru filtrele selectate.</p>
         </td>
-      </tr>
-    `;
+      </tr>`;
     if (window.lucide) lucide.createIcons();
     return;
   }
 
   tbody.innerHTML = filtered.map(item => {
-    const statusClass = item.status === 'completed'
+    const status = item.status === 'completed'
       ? 'completed'
       : (item.status === 'cancelled' ? 'cancelled' : 'confirmed');
-
     const statusLabel = item.status === 'completed'
       ? 'Finalizat'
       : (item.status === 'cancelled' ? 'Anulat' : 'Confirmat');
+    const itemId = Number(item.id);
 
     return `
       <tr>
         <td>
-          <span style="font-family:monospace;font-weight:700;color:var(--gold);background:rgba(217,164,78,0.1);padding:3px 8px;border-radius:4px">
-            ${item.code || 'FB-0000'}
-          </span>
+          <span class="appointment-code">${escapeHtml(item.code || 'FB-0000')}</span>
         </td>
         <td>
-          <div style="font-weight:700;color:#fff">${item.name}</div>
-          <div style="font-size:0.75rem;color:#8c857f">${item.phone || 'Fără telefon'}</div>
+          <div class="appointment-client">${escapeHtml(item.name || '—')}</div>
+          <div class="appointment-phone">${escapeHtml(item.phone || 'Fără telefon')}</div>
         </td>
         <td>
-          <div style="color:#d6d3d1;font-weight:600">${item.service}</div>
-          <div style="font-size:0.75rem;color:var(--gold)">$${item.price}.00</div>
+          <div class="appointment-service-name">${escapeHtml(item.service || '—')}</div>
+          <div class="appointment-price">${escapeHtml(formatMoney(item.price))}</div>
         </td>
         <td>
-          <div style="font-weight:600;color:#fff">${item.barber}</div>
+          <div class="appointment-barber">${escapeHtml(item.barber || '—')}</div>
         </td>
         <td>
-          <div style="font-weight:600;color:#fff">${formatPrettyDate(item.date)}</div>
-          <div style="font-size:0.78rem;color:var(--gold)">${item.slot}</div>
+          <div class="appointment-date">${escapeHtml(formatPrettyDate(item.date))}</div>
+          <div class="appointment-slot">${escapeHtml(item.slot || '—')}</div>
         </td>
         <td>
-          <span class="status-badge ${statusClass}">${statusLabel}</span>
+          <span class="status-badge ${status}">${statusLabel}</span>
         </td>
         <td>
           <div class="table-actions">
             ${item.status === 'confirmed' ? `
-              <button class="btn-action-icon" title="Marchează Finalizat" onclick="markAppointmentCompleted(${item.id})">
+              <button class="btn-action-icon" title="Marchează Finalizat" onclick="markAppointmentCompleted(${itemId})">
                 <i data-lucide="check" style="width:16px;height:16px;color:#22c55e"></i>
               </button>
-              <button class="btn-action-icon danger" title="Anulează Programarea (Eliberează Ora)" onclick="cancelAppointmentAdmin(${item.id})">
+              <button class="btn-action-icon danger" title="Anulează Programarea (Eliberează Ora)" onclick="cancelAppointmentAdmin(${itemId})">
                 <i data-lucide="x" style="width:16px;height:16px"></i>
-              </button>
-            ` : ''}
-            <button class="btn-action-icon" title="Detalii / Note" onclick="showApptNotes('${escapeHtml(item.notes || 'Fără note speciale.')}')">
+              </button>` : ''}
+            <button class="btn-action-icon" title="Detalii / Note" onclick="showApptNotesById(${itemId})">
               <i data-lucide="file-text" style="width:16px;height:16px"></i>
             </button>
-            <button class="btn-action-icon danger" title="Șterge Definitiv" onclick="deleteAppointmentPermanent(${item.id})">
+            <button class="btn-action-icon danger" title="Șterge Definitiv" onclick="deleteAppointmentPermanent(${itemId})">
               <i data-lucide="trash-2" style="width:16px;height:16px"></i>
             </button>
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  if (window.lucide) lucide.createIcons();
+}
+
+function appointmentSortKey(appointment) {
+  const start = parseTimeToMinutes(appointment.slot);
+  return `${appointment.date || '9999-99-99'}-${String(Number.isNaN(start) ? 9999 : start).padStart(4, '0')}`;
 }
 
 function markAppointmentCompleted(id) {
-  let list = getStoredAppointments();
-  list = list.map(a => a.id === id ? { ...a, status: 'completed' } : a);
-  saveStoredAppointments(list);
+  const numericId = Number(id);
+  const updated = getStoredAppointments().map(appointment =>
+    Number(appointment.id) === numericId ? { ...appointment, status: 'completed' } : appointment
+  );
+  saveStoredAppointments(updated);
 }
 
 function cancelAppointmentAdmin(id) {
-  if (confirm('Ești sigur că vrei să anulezi programarea? Ora va redeveni imediat DISPONIBILĂ pentru clienți.')) {
-    let list = getStoredAppointments();
-    list = list.map(a => a.id === id ? { ...a, status: 'cancelled' } : a);
-    saveStoredAppointments(list);
-  }
+  if (!confirm('Ești sigur că vrei să anulezi programarea? Ora va redeveni imediat disponibilă pentru clienți.')) return;
+
+  const numericId = Number(id);
+  const updated = getStoredAppointments().map(appointment =>
+    Number(appointment.id) === numericId ? { ...appointment, status: 'cancelled' } : appointment
+  );
+  saveStoredAppointments(updated);
 }
 
 function deleteAppointmentPermanent(id) {
-  if (confirm('Ștergi definitiv această înregistrare din baza de date?')) {
-    let list = getStoredAppointments();
-    list = list.filter(a => a.id !== id);
-    saveStoredAppointments(list);
+  if (!confirm('Ștergi definitiv această înregistrare din baza de date?')) return;
+
+  const numericId = Number(id);
+  const updated = getStoredAppointments().filter(appointment => Number(appointment.id) !== numericId);
+  saveStoredAppointments(updated);
+}
+
+function showApptNotesById(id) {
+  const numericId = Number(id);
+  const appointment = getStoredAppointments().find(item => Number(item.id) === numericId);
+  if (!appointment) {
+    alert('Programarea nu a fost găsită.');
+    return;
   }
+  alert(`Note Client / Preferințe:\n\n${appointment.notes || 'Fără note speciale.'}`);
 }
 
-function showApptNotes(notes) {
-  alert('Note Client / Preferințe:\n\n' + notes);
-}
+/* ── Manual walk-in booking ──────────────────────────────────────────────── */
 
-// ── Manual Walk-In Booking Modal ────────────────────────────────────────────
 function openWalkInModal() {
   const modal = document.getElementById('walkInModal');
-  const dateInput = document.getElementById('walkInDate');
-  const barberSelect = document.getElementById('walkInBarber');
+  const today = getLocalISODate();
 
+  ['walkInName', 'walkInPhone', 'walkInNotes'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+
+  const dateInput = document.getElementById('walkInDate');
   if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
   }
-  if (barberSelect && currentSession && currentSession.id !== 'admin') {
+
+  const barberSelect = document.getElementById('walkInBarber');
+  if (barberSelect && currentSession && currentSession.id !== 'admin' && ALL_BARBERS.includes(currentSession.name)) {
     barberSelect.value = currentSession.name;
   }
 
-  if (modal) modal.classList.add('active');
+  openAdminModal(modal);
+  const nameInput = document.getElementById('walkInName');
+  if (nameInput) window.setTimeout(() => nameInput.focus(), 60);
 }
 
 function closeWalkInModal() {
-  const modal = document.getElementById('walkInModal');
-  if (modal) modal.classList.remove('active');
+  closeAdminModal(document.getElementById('walkInModal'));
 }
 
 function saveWalkInBooking() {
-  const name = document.getElementById('walkInName').value.trim();
-  const phone = document.getElementById('walkInPhone').value.trim();
-  const serviceSelect = document.getElementById('walkInService');
-  const barberSelect = document.getElementById('walkInBarber');
-  const date = document.getElementById('walkInDate').value;
-  const slot = document.getElementById('walkInSlot').value;
-  const notes = document.getElementById('walkInNotes').value.trim();
+  const name = valueOf('walkInName');
+  const phone = valueOf('walkInPhone');
+  const serviceValue = valueOf('walkInService');
+  const barber = valueOf('walkInBarber');
+  const date = valueOf('walkInDate');
+  const slot = valueOf('walkInSlot');
+  const notes = valueOf('walkInNotes');
+
+  const [rawService, rawPrice] = serviceValue.split('|');
+  const service = normalizeServiceName(rawService);
+  const durationMinutes = getServiceDuration(service);
 
   if (!name) {
     alert('Introduceți numele clientului.');
     return;
   }
+  if (!date) {
+    alert('Selectați data programării.');
+    return;
+  }
+  if (date < getLocalISODate()) {
+    alert('Data selectată este în trecut.');
+    return;
+  }
+  if (!barber || !ALL_BARBERS.includes(barber)) {
+    alert('Selectați un frizer valid.');
+    return;
+  }
 
-  const [service, price] = serviceSelect.value.split('|');
+  const startMinutes = parseTimeToMinutes(slot);
+  const hours = getShopHours(date);
+  if (Number.isNaN(startMinutes) || !hours) {
+    alert('Ora selectată nu este validă.');
+    return;
+  }
+  if (startMinutes < hours.open || startMinutes + durationMinutes > hours.close) {
+    alert(`Ora selectată este în afara programului (${minutesToTimeLabel(hours.open)} – ${minutesToTimeLabel(hours.close)}).`);
+    return;
+  }
 
-  const newAppt = {
-    id: Date.now(),
-    code: 'FB-' + Math.floor(1000 + Math.random() * 9000),
-    name: name,
-    phone: phone || '(555) 000-0000',
-    email: 'walkin@fadeandblade.com',
-    service: service,
-    price: Number(price) || 35,
-    barber: barberSelect.value,
-    date: date,
-    slot: slot,
+  const conflict = getBarberConflict(date, startMinutes, durationMinutes, barber);
+  if (conflict === 'blocked') {
+    alert('Frizerul are o pauză / indisponibilitate blocată la acea oră. Deblochează intervalul sau alege altă oră.');
+    return;
+  }
+  if (conflict === 'booked') {
+    alert('Frizerul are deja o programare care se suprapune cu această oră. Alege alt interval.');
+    return;
+  }
+
+  const list = getStoredAppointments();
+  const newAppointment = {
+    id: generateId(),
+    code: generateBookingCode(list),
+    clientId: `walkin-${Date.now()}`,
+    name,
+    phone,
+    email: '',
+    service,
+    price: Number(rawPrice) || getServicePrice(service),
+    duration: `${durationMinutes} min`,
+    durationMinutes,
+    barber,
+    date,
+    slot,
     status: 'confirmed',
     notes: notes || 'Walk-in programat manual din Admin Panel'
   };
 
-  const list = getStoredAppointments();
-  list.unshift(newAppt);
-  saveStoredAppointments(list);
+  if (!setStoredAppointments([newAppointment, ...list])) {
+    alert('Programarea nu a putut fi salvată în browser.');
+    return;
+  }
 
   closeWalkInModal();
-  alert(`Programarea a fost salvată cu succes!\nCod: ${newAppt.code}\nOra: ${slot} pentru ${newAppt.barber} este acum OCUPATĂ.`);
+  renderDashboardStats();
+  renderAppointmentsTable();
+
+  alert(`Programarea a fost salvată cu succes!\nCod: ${newAppointment.code}\nOra: ${slot} pentru ${newAppointment.barber} este acum ocupată.`);
 }
 
-// ── Gallery Management (Add, Edit, Delete, Reset) ───────────────────────────
-function getStoredGallery() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_gallery_items') || '[]');
-  } catch(e) {
-    return DEFAULT_GALLERY;
-  }
+function valueOf(id) {
+  const element = document.getElementById(id);
+  return element ? element.value.trim() : '';
 }
+
+/* ── Gallery management ──────────────────────────────────────────────────── */
 
 function saveStoredGallery(list) {
-  localStorage.setItem('fb_gallery_items', JSON.stringify(list));
+  if (!setStoredGallery(list)) {
+    alert('Galeria nu a putut fi salvată în browser.');
+    return false;
+  }
   renderGalleryManager();
+  return true;
 }
 
 function renderGalleryManager() {
@@ -638,204 +564,301 @@ function renderGalleryManager() {
   const container = document.getElementById('adminGalleryGrid');
   if (!container) return;
 
-  container.innerHTML = gallery.map(item => `
-    <div class="admin-gallery-card">
-      <div class="admin-gallery-img">
-        <img src="${item.imageUrl}" alt="${item.title}" loading="lazy" />
-        <span class="admin-gallery-category">${item.category}</span>
-      </div>
-      <div class="admin-gallery-info">
-        <div>
-          <h4>${item.title}</h4>
-          <p>Autor: <strong>${item.barber}</strong></p>
-        </div>
-        <div class="admin-gallery-actions">
-          <button class="btn-primary" style="padding:8px;font-size:0.75rem" onclick="openEditPhotoModal(${item.id})">
-            Editează
-          </button>
-          <button class="btn-header-action" style="padding:8px" title="Șterge" onclick="deleteGalleryPhoto(${item.id})">
-            <i data-lucide="trash-2" style="width:14px;height:14px;color:#f87171"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  if (window.lucide) {
-    lucide.createIcons();
+  if (gallery.length === 0) {
+    container.innerHTML = '<p class="admin-empty-state">Nu există fotografii în galerie. Adaugă prima fotografie.</p>';
+    return;
   }
+
+  container.innerHTML = gallery.map(item => {
+    const categoryLabel = item.categoryLabel || GALLERY_CATEGORIES[item.category] || item.category;
+    const itemId = Number(item.id);
+    return `
+      <div class="admin-gallery-card">
+        <div class="admin-gallery-img">
+          <img src="${escapeAttr(resolveAdminImageUrl(item.imageUrl))}" alt="${escapeAttr(item.title)}" loading="lazy" />
+          <span class="admin-gallery-category">${escapeHtml(categoryLabel)}</span>
+        </div>
+        <div class="admin-gallery-info">
+          <div>
+            <h4>${escapeHtml(item.title)}</h4>
+            <p>Autor: <strong>${escapeHtml(item.barber || '—')}</strong></p>
+          </div>
+          <div class="admin-gallery-actions">
+            <button class="btn-primary" style="padding:8px;font-size:0.75rem" onclick="openEditPhotoModal(${itemId})">
+              Editează
+            </button>
+            <button class="btn-header-action" style="padding:8px" title="Șterge" onclick="deleteGalleryPhoto(${itemId})">
+              <i data-lucide="trash-2" style="width:14px;height:14px;color:#f87171"></i>
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  if (window.lucide) lucide.createIcons();
 }
 
 function openAddPhotoModal() {
   editingPhotoId = null;
-  document.getElementById('photoModalTitle').textContent = 'Adaugă Fotografie Nouă în Galerie';
-  document.getElementById('photoTitle').value = '';
-  document.getElementById('photoUrl').value = '';
-  document.getElementById('photoCategory').value = 'fade';
-  document.getElementById('photoBarber').value = currentSession ? currentSession.name : 'Marcus Rivera';
-  document.getElementById('photoPreview').src = '';
-  document.getElementById('photoPreviewWrap').style.display = 'none';
 
-  document.getElementById('photoModal').classList.add('active');
+  const titleEl = document.getElementById('photoModalTitle');
+  if (titleEl) titleEl.textContent = 'Adaugă Fotografie Nouă în Galerie';
+
+  const titleInput = document.getElementById('photoTitle');
+  const urlInput = document.getElementById('photoUrl');
+  const categorySelect = document.getElementById('photoCategory');
+  const barberSelect = document.getElementById('photoBarber');
+  const preview = document.getElementById('photoPreview');
+  const previewWrap = document.getElementById('photoPreviewWrap');
+
+  if (titleInput) titleInput.value = '';
+  if (urlInput) urlInput.value = '';
+  if (categorySelect) categorySelect.value = 'fade';
+  if (barberSelect) {
+    const defaultBarber = currentSession
+      && currentSession.id !== 'admin'
+      && ALL_BARBERS.includes(currentSession.name)
+      ? currentSession.name
+      : 'Fade & Blade';
+    barberSelect.value = defaultBarber;
+  }
+  if (preview) preview.src = '';
+  if (previewWrap) previewWrap.style.display = 'none';
+
+  openAdminModal(document.getElementById('photoModal'));
+  if (titleInput) window.setTimeout(() => titleInput.focus(), 60);
 }
 
 function openEditPhotoModal(id) {
-  const gallery = getStoredGallery();
-  const item = gallery.find(p => p.id === id);
+  const numericId = Number(id);
+  const item = getStoredGallery().find(photo => Number(photo.id) === numericId);
   if (!item) return;
 
-  editingPhotoId = id;
-  document.getElementById('photoModalTitle').textContent = 'Editează Fotografia';
-  document.getElementById('photoTitle').value = item.title;
-  document.getElementById('photoUrl').value = item.imageUrl;
-  document.getElementById('photoCategory').value = item.category;
-  document.getElementById('photoBarber').value = item.barber;
-  document.getElementById('photoPreview').src = item.imageUrl;
-  document.getElementById('photoPreviewWrap').style.display = 'block';
+  editingPhotoId = numericId;
 
-  document.getElementById('photoModal').classList.add('active');
+  const titleEl = document.getElementById('photoModalTitle');
+  const titleInput = document.getElementById('photoTitle');
+  const urlInput = document.getElementById('photoUrl');
+  const categorySelect = document.getElementById('photoCategory');
+  const barberSelect = document.getElementById('photoBarber');
+  const preview = document.getElementById('photoPreview');
+  const previewWrap = document.getElementById('photoPreviewWrap');
+
+  if (titleEl) titleEl.textContent = 'Editează Fotografia';
+  if (titleInput) titleInput.value = item.title;
+  if (urlInput) urlInput.value = item.imageUrl;
+
+  if (categorySelect) {
+    const hasCategory = Array.from(categorySelect.options).some(option => option.value === item.category);
+    categorySelect.value = hasCategory ? item.category : 'fade';
+  }
+
+  if (barberSelect) {
+    const hasBarber = Array.from(barberSelect.options).some(option => option.value === item.barber);
+    barberSelect.value = hasBarber ? item.barber : 'Fade & Blade';
+  }
+
+  if (preview) preview.src = resolveAdminImageUrl(item.imageUrl);
+  if (previewWrap) previewWrap.style.display = 'block';
+
+  openAdminModal(document.getElementById('photoModal'));
 }
 
 function closePhotoModal() {
-  document.getElementById('photoModal').classList.remove('active');
+  closeAdminModal(document.getElementById('photoModal'));
 }
 
 function previewPhotoUrl() {
-  const url = document.getElementById('photoUrl').value.trim();
+  const urlInput = document.getElementById('photoUrl');
   const preview = document.getElementById('photoPreview');
-  const wrap = document.getElementById('photoPreviewWrap');
+  const previewWrap = document.getElementById('photoPreviewWrap');
+  if (!urlInput || !preview || !previewWrap) return;
 
-  if (url) {
-    preview.src = url;
-    wrap.style.display = 'block';
-  } else {
-    wrap.style.display = 'none';
+  const url = urlInput.value.trim();
+  if (!url) {
+    preview.src = '';
+    previewWrap.style.display = 'none';
+    return;
   }
+
+  preview.src = resolveAdminImageUrl(url);
+  previewWrap.style.display = 'block';
 }
 
 function savePhoto() {
-  const title = document.getElementById('photoTitle').value.trim();
-  const url = document.getElementById('photoUrl').value.trim();
-  const category = document.getElementById('photoCategory').value;
-  const barber = document.getElementById('photoBarber').value;
+  const title = valueOf('photoTitle');
+  const url = valueOf('photoUrl');
+  const category = valueOf('photoCategory') || 'fade';
+  const barber = valueOf('photoBarber') || 'Fade & Blade';
 
   if (!title || !url) {
     alert('Introduceți titlul și URL-ul imaginii.');
     return;
   }
+  if (!isValidImageUrl(url)) {
+    alert('URL-ul imaginii trebuie să înceapă cu https://, http:// sau o cale locală (images/...).');
+    return;
+  }
 
   let gallery = getStoredGallery();
+  const categoryLabel = GALLERY_CATEGORIES[category] || category;
 
   if (editingPhotoId) {
-    // Edit
-    gallery = gallery.map(item => {
-      if (item.id === editingPhotoId) {
-        return { ...item, title, imageUrl: url, category, barber };
-      }
-      return item;
-    });
+    gallery = gallery.map(item => Number(item.id) === editingPhotoId
+      ? { ...item, title, imageUrl: url, category, categoryLabel, barber }
+      : item);
   } else {
-    // Add new
-    const newPhoto = {
-      id: Date.now(),
+    gallery = [{
+      id: generateId(),
       title,
       category,
-      categoryLabel: category.toUpperCase(),
+      categoryLabel,
       barber,
       imageUrl: url,
       featured: false
-    };
-    gallery.unshift(newPhoto);
+    }, ...gallery];
   }
 
-  saveStoredGallery(gallery);
+  if (!saveStoredGallery(gallery)) return;
+
   closePhotoModal();
-  alert('Galeria a fost actualizată! Noul aspect este sincronizat instant pe site.');
+  alert('Galeria a fost actualizată! Modificarea este vizibilă pe site.');
 }
 
 function deleteGalleryPhoto(id) {
-  if (confirm('Sigur doriți să ștergeți această fotografie din galerie?')) {
-    let gallery = getStoredGallery();
-    gallery = gallery.filter(p => p.id !== id);
-    saveStoredGallery(gallery);
-  }
+  if (!confirm('Sigur doriți să ștergeți această fotografie din galerie?')) return;
+
+  const numericId = Number(id);
+  const gallery = getStoredGallery().filter(photo => Number(photo.id) !== numericId);
+  saveStoredGallery(gallery);
 }
 
 function resetDefaultGallery() {
-  if (confirm('Resetezi galeria la cele 12 fotografii HD implicite?')) {
-    saveStoredGallery(DEFAULT_GALLERY);
-  }
+  if (!confirm('Resetezi galeria la cele 12 fotografii HD implicite?')) return;
+  saveStoredGallery(cloneDefaultGallery());
+  alert('Galeria a fost resetată la fotografiile inițiale.');
 }
 
-// ── Time-off & Slot Blocker ─────────────────────────────────────────────────
-function getBlockedSlots() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_blocked_slots') || '[]');
-  } catch(e) {
-    return [];
-  }
-}
+/* ── Time-off & slot blocker ─────────────────────────────────────────────── */
 
 function saveBlockedSlots(list) {
-  localStorage.setItem('fb_blocked_slots', JSON.stringify(list));
+  if (!setStoredBlockedSlots(list)) {
+    alert('Intervalele blocate nu au putut fi salvate în browser.');
+    return false;
+  }
   renderBlockedSlots();
+  return true;
 }
 
 function renderBlockedSlots() {
-  const blocked = getBlockedSlots();
   const container = document.getElementById('blockedSlotsList');
   if (!container) return;
 
+  const blocked = getStoredBlockedSlots();
   if (blocked.length === 0) {
     container.innerHTML = '<p style="color:#78716c;padding:16px 0">Nu există intervale blocate momentan.</p>';
     return;
   }
 
-  container.innerHTML = blocked.map((b, idx) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#181512;border:1px solid var(--border);border-radius:4px;margin-bottom:10px">
+  container.innerHTML = blocked.map((block, index) => `
+    <div class="blocked-slot-row">
       <div>
-        <strong style="color:#fff">${b.barber}</strong> — <span style="color:var(--gold)">${b.date} la ${b.slot}</span>
-        <div style="font-size:0.75rem;color:#8c857f">Motiv: ${b.reason || 'Pauză / Indisponibil'}</div>
+        <strong style="color:#fff">${escapeHtml(block.barber || '—')}</strong> — <span style="color:var(--gold)">${escapeHtml(block.date)} la ${escapeHtml(block.slot)}</span>
+        <div style="font-size:0.75rem;color:#8c857f">Motiv: ${escapeHtml(block.reason || 'Pauză / Indisponibil')}</div>
       </div>
-      <button class="btn-action-icon danger" onclick="unblockSlot(${idx})" title="Deblochează Ora">
+      <button class="btn-action-icon danger" onclick="unblockSlot(${index})" title="Deblochează Ora">
         <i data-lucide="unlock" style="width:15px;height:15px"></i>
       </button>
-    </div>
-  `).join('');
+    </div>`).join('');
 
   if (window.lucide) lucide.createIcons();
 }
 
 function blockNewSlot() {
-  const barber = document.getElementById('blockBarber').value;
-  const date = document.getElementById('blockDate').value;
-  const slot = document.getElementById('blockSlot').value;
-  const reason = document.getElementById('blockReason').value.trim();
+  const barber = valueOf('blockBarber');
+  const date = valueOf('blockDate');
+  const slot = valueOf('blockSlot');
+  const reason = valueOf('blockReason');
 
   if (!date || !slot) {
     alert('Selectați data și ora.');
     return;
   }
+  if (!ALL_BARBERS.includes(barber)) {
+    alert('Selectați un frizer valid.');
+    return;
+  }
+  if (date < getLocalISODate()) {
+    alert('Nu poți bloca un interval dintr-o dată trecută.');
+    return;
+  }
 
-  const blocked = getBlockedSlots();
-  blocked.push({ barber, date, slot, reason: reason || 'Pauză programată' });
-  saveBlockedSlots(blocked);
+  const startMinutes = parseTimeToMinutes(slot);
+  const blocked = getStoredBlockedSlots();
+
+  const duplicate = blocked.some(block =>
+    block.date === date
+    && block.barber === barber
+    && parseTimeToMinutes(block.slot) === startMinutes
+  );
+  if (duplicate) {
+    alert('Acest interval este deja blocat pentru frizerul selectat.');
+    return;
+  }
+
+  if (hasAppointmentConflict(date, startMinutes, DEFAULT_BLOCK_DURATION, barber)) {
+    alert('Există deja o programare la acea oră pentru frizerul selectat. Anuleaz-o mai întâi.');
+    return;
+  }
+
+  blocked.push({
+    barber,
+    date,
+    slot,
+    durationMinutes: DEFAULT_BLOCK_DURATION,
+    reason: reason || 'Pauză programată'
+  });
+
+  if (!saveBlockedSlots(blocked)) return;
+
+  const reasonInput = document.getElementById('blockReason');
+  if (reasonInput) reasonInput.value = '';
 
   alert(`Intervalul ${slot} din data de ${date} pentru ${barber} a fost blocat cu succes!`);
 }
 
 function unblockSlot(index) {
-  const blocked = getBlockedSlots();
+  const blocked = getStoredBlockedSlots();
+  if (index < 0 || index >= blocked.length) return;
   blocked.splice(index, 1);
   saveBlockedSlots(blocked);
 }
 
-// ── Services & Price Editor ─────────────────────────────────────────────────
+/* ── Services & prices ───────────────────────────────────────────────────── */
+
 function renderServicesEditor() {
-  // Can be expanded as needed
+  const container = document.getElementById('servicesList');
+  if (!container) return;
+
+  container.innerHTML = SERVICES.map(service => `
+    <div class="service-row">
+      <div>
+        <strong class="service-row-name">${escapeHtml(service.name)}</strong>
+        <p class="service-row-description">${escapeHtml(service.description)} (${service.duration} min)</p>
+      </div>
+      <span class="service-row-price">$${service.price}</span>
+    </div>`).join('');
 }
 
-// ── Export CSV Function ─────────────────────────────────────────────────────
+/* ── CSV export ──────────────────────────────────────────────────────────── */
+
+function csvCell(value) {
+  let text = String(value == null ? '' : value);
+  // Prevent Excel/LibreOffice formula injection.
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 function exportAppointmentsCSV() {
   const list = getStoredAppointments();
   if (list.length === 0) {
@@ -844,48 +867,102 @@ function exportAppointmentsCSV() {
   }
 
   const headers = ['Cod', 'Client', 'Telefon', 'Email', 'Serviciu', 'Pret ($)', 'Frizer', 'Data', 'Ora', 'Status', 'Note'];
-  const rows = list.map(a => [
-    a.code,
-    `"${(a.name || '').replace(/"/g, '""')}"`,
-    `"${a.phone || ''}"`,
-    `"${a.email || ''}"`,
-    `"${(a.service || '').replace(/"/g, '""')}"`,
-    a.price,
-    `"${a.barber}"`,
-    a.date,
-    `"${a.slot}"`,
-    a.status,
-    `"${(a.notes || '').replace(/"/g, '""')}"`
+  const rows = list.map(appointment => [
+    appointment.code,
+    appointment.name,
+    appointment.phone,
+    appointment.email,
+    appointment.service,
+    appointment.price,
+    appointment.barber,
+    appointment.date,
+    appointment.slot,
+    appointment.status,
+    appointment.notes
   ]);
 
-  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-  const encodedUri = encodeURI(csvContent);
+  const csvContent = '\uFEFF' + [
+    headers.map(csvCell).join(','),
+    ...rows.map(row => row.map(csvCell).join(','))
+  ].join('\r\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `fade_blade_programari_${new Date().toISOString().split('T')[0]}.csv`);
+  link.href = url;
+  link.setAttribute('download', `fade_blade_programari_${getLocalISODate()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-function formatPrettyDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
+/* ── Cross-tab live sync ─────────────────────────────────────────────────── */
+
+function initStorageSync() {
+  window.addEventListener('storage', event => {
+    if (!currentSession) return;
+    if (event.key === FB_KEYS.appointments) {
+      renderDashboardStats();
+      renderAppointmentsTable();
+    } else if (event.key === FB_KEYS.gallery) {
+      renderGalleryManager();
+    } else if (event.key === FB_KEYS.blocked) {
+      renderBlockedSlots();
+    }
+  });
 }
 
-function escapeHtml(str) {
-  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+/* ── Admin modal helpers ─────────────────────────────────────────────────── */
+
+function syncAdminBodyLock() {
+  const hasOpenModal = document.querySelector('.admin-modal.active');
+  document.body.classList.toggle('no-scroll', Boolean(hasOpenModal));
 }
 
-// Global window mappings for inline event calls
+function openAdminModal(modal) {
+  if (!modal) return;
+  if (!modal.classList.contains('active')) {
+    lastFocusedAdminElement = document.activeElement;
+  }
+  modal.classList.add('active');
+  syncAdminBodyLock();
+}
+
+function closeAdminModal(modal) {
+  if (!modal) return;
+  modal.classList.remove('active');
+  syncAdminBodyLock();
+
+  if (lastFocusedAdminElement && typeof lastFocusedAdminElement.focus === 'function') {
+    try { lastFocusedAdminElement.focus(); } catch (error) { /* ignore */ }
+  }
+}
+
+function initAdminModalBehavior() {
+  document.querySelectorAll('.admin-modal').forEach(modal => {
+    modal.addEventListener('click', event => {
+      if (event.target !== modal) return;
+      if (modal.id === 'walkInModal') closeWalkInModal();
+      else if (modal.id === 'photoModal') closePhotoModal();
+    });
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    closeWalkInModal();
+    closePhotoModal();
+  });
+}
+
+/* ── Global mappings for inline event handlers ───────────────────────────── */
+
 window.quickLogin = quickLogin;
 window.logout = logout;
 window.markAppointmentCompleted = markAppointmentCompleted;
 window.cancelAppointmentAdmin = cancelAppointmentAdmin;
 window.deleteAppointmentPermanent = deleteAppointmentPermanent;
-window.showApptNotes = showApptNotes;
+window.showApptNotesById = showApptNotesById;
 window.openWalkInModal = openWalkInModal;
 window.closeWalkInModal = closeWalkInModal;
 window.saveWalkInBooking = saveWalkInBooking;

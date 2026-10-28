@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Fade & Blade — frizerie premium în Downtown Arts District. Tunsori, skin fade, bărbierit cu prosop fierbinte și programări online." />
+  <meta name="theme-color" content="#0c0a09" />
   <title>FADE & BLADE — Premium Barbershop & Grooming Lounge</title>
-  
+
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg" />
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- Icons (local vendor build, nu depinde de CDN) -->
+  <script src="js/vendor/lucide.min.js"></script>
 
   <!-- Modular Stylesheet -->
   <link rel="stylesheet" href="css/styles.css" />
@@ -42,13 +46,13 @@
       </ul>
 
       <div class="nav-actions">
-        <button class="nav-appointments-btn" id="openMyAppointmentsBtn" title="Vezi programările mele salvate">
+        <button class="nav-appointments-btn" id="openMyAppointmentsBtn" title="Vezi programările mele salvate" aria-label="Vezi programările mele salvate">
           <i data-lucide="calendar-check" style="width:15px;height:15px"></i>
           <span>Programări</span>
           <span class="nav-appointments-badge" id="myApptCount">0</span>
         </button>
 
-        <a href="admin/" class="nav-admin-link" title="Portal Frizeri & Administrare (Useri: 1, 2, 3)">
+        <a href="admin/" class="nav-admin-link" title="Portal Frizeri & Administrare (user 1/2/3 sau admin — parola este identică cu userul)" aria-label="Portal Frizeri și Administrare">
           <i data-lucide="shield-check" style="width:15px;height:15px"></i>
           <span>Admin Portal</span>
         </a>
@@ -72,7 +76,7 @@
   <div class="mobile-nav-drawer" id="mobileNavDrawer">
     <div class="drawer-header">
       <span class="logo">FADE <span>&</span> BLADE</span>
-      <button class="drawer-close-btn" id="drawerCloseBtn"><i data-lucide="x"></i></button>
+      <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Închide meniul"><i data-lucide="x"></i></button>
     </div>
     <ul class="drawer-links">
       <li><a href="#services"><i data-lucide="scissors" style="width:16px;height:16px;color:var(--gold)"></i> Servicii</a></li>
@@ -372,16 +376,23 @@
       </div>
 
       <div class="comparison-container reveal">
-        <div class="comparison-slider" id="comparisonSlider">
+        <div class="comparison-slider"
+             id="comparisonSlider"
+             role="slider"
+             tabindex="0"
+             aria-label="Comparație înainte și după — trage sau folosește tastele stânga/dreapta"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-valuenow="50">
           <!-- After Image (Base) -->
           <div class="comparison-image after">
-            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80" alt="După: Tuns Fade și Barbă Conturată" />
+            <img src="images/transformare-dupa.jpg" alt="După: Tuns Fade și Barbă Conturată" />
             <div class="comparison-badge after-badge">DUPĂ — FADE & BLADE</div>
           </div>
 
           <!-- Before Image (Overlay clipped) -->
           <div class="comparison-image before" id="comparisonBefore">
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80" alt="Înainte de Tuns" />
+            <img src="images/transformare-inainte.jpg" alt="Înainte de Tuns" />
             <div class="comparison-badge before-badge">ÎNAINTE</div>
           </div>
 
@@ -428,8 +439,8 @@
   </section>
 
   <!-- ═══════════════════ LIGHTBOX MODAL ═══════════════════ -->
-  <div class="lightbox-modal" id="lightboxModal">
-    <button class="lightbox-close" onclick="closeLightbox()"><i data-lucide="x"></i></button>
+  <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-label="Previzualizare imagine galerie">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Închide previzualizarea"><i data-lucide="x"></i></button>
     <div class="lightbox-content">
       <div class="lightbox-img-wrap">
         <img id="lightboxImg" src="" alt="Zoomed Barbershop Look" />
@@ -725,7 +736,7 @@
   </footer>
 
   <!-- ═══════════════════ AMBIENT AUDIO WIDGET ═══════════════════ -->
-  <button class="soundscape-toggle" id="soundscapeBtn">
+  <button class="soundscape-toggle" id="soundscapeBtn" aria-pressed="false" aria-label="Comută muzica ambient a salonului">
     <i data-lucide="radio" style="width:16px;height:16px"></i>
     <span id="soundscapeLabel">Shop Vibe: Lofi & Vinil</span>
     <div class="soundscape-eq">
@@ -744,14 +755,14 @@
   </div>
 
   <!-- ═══════════════════ INTERACTIVE BOOKING MODAL ═══════════════════ -->
-  <div class="modal-overlay" id="bookingModal">
+  <div class="modal-overlay" id="bookingModal" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
     <div class="booking-modal-box">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:10px">
           <i data-lucide="scissors" style="width:20px;height:20px;color:var(--gold)"></i>
-          <h3>Rezervă Scaunul Tău</h3>
+          <h3 id="bookingModalTitle">Rezervă Scaunul Tău</h3>
         </div>
-        <button class="modal-close-btn" onclick="closeBookingModal()"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn" onclick="closeBookingModal()" aria-label="Închide rezervarea"><i data-lucide="x"></i></button>
       </div>
 
       <!-- Stepper Indicator -->
@@ -768,42 +779,42 @@
         <div class="step-pane active" id="stepPane1">
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">Selectează serviciul dorit pentru vizita ta:</p>
           <div class="choice-grid">
-            <div class="choice-card selected" onclick="selectService('Classic Haircut', 35, '45 min', this)">
+            <div class="choice-card selected" data-service="Classic Haircut" role="button" tabindex="0" aria-pressed="true" onclick="selectService('Classic Haircut', 35, '45 min', this)">
               <div>
                 <h4>Classic Haircut</h4>
                 <p>Spălat, tuns foarfecă & styling</p>
               </div>
               <div class="price">$35</div>
             </div>
-            <div class="choice-card" onclick="selectService('Signature Skin Fade', 40, '50 min', this)">
+            <div class="choice-card" data-service="Signature Skin Fade" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Signature Skin Fade', 40, '50 min', this)">
               <div>
                 <h4>Signature Skin Fade</h4>
                 <p>Pierdut la piele cu shaver foil</p>
               </div>
               <div class="price">$40</div>
             </div>
-            <div class="choice-card" onclick="selectService('Royal Hot Towel Shave', 30, '30 min', this)">
+            <div class="choice-card" data-service="Royal Hot Towel Shave" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Royal Hot Towel Shave', 30, '30 min', this)">
               <div>
                 <h4>Royal Hot Towel Shave</h4>
                 <p>Brici clasic & prosoape fierbinți</p>
               </div>
               <div class="price">$30</div>
             </div>
-            <div class="choice-card" onclick="selectService('Beard Sculpting', 25, '25 min', this)">
+            <div class="choice-card" data-service="Beard Sculpting" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Beard Sculpting', 25, '25 min', this)">
               <div>
                 <h4>Beard Sculpting</h4>
                 <p>Arhitectură barbă & uleiuri hidratante</p>
               </div>
               <div class="price">$25</div>
             </div>
-            <div class="choice-card" onclick="selectService('The Royal Treatment', 85, '90 min', this)">
+            <div class="choice-card" data-service="The Royal Treatment" role="button" tabindex="0" aria-pressed="false" onclick="selectService('The Royal Treatment', 85, '90 min', this)">
               <div>
                 <h4>The Royal Treatment</h4>
                 <p>Tuns + Bărbierit + Barbă + Argilă</p>
               </div>
               <div class="price">$85</div>
             </div>
-            <div class="choice-card" onclick="selectService('Freestyle Hair Art & Color', 55, '60 min', this)">
+            <div class="choice-card" data-service="Freestyle Hair Art & Color" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Freestyle Hair Art & Color', 55, '60 min', this)">
               <div>
                 <h4>Freestyle Hair Art & Color</h4>
                 <p>Desene geometrice & nuanțare</p>
@@ -817,7 +828,7 @@
         <div class="step-pane" id="stepPane2">
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">Selectează frizerul preferat sau primul scaun disponibil:</p>
           <div style="display:flex;flex-direction:column;gap:12px">
-            <div class="barber-modal-card selected" onclick="selectBarber('First Available Master Barber', 'Any Chair', this)">
+            <div class="barber-modal-card selected" data-barber="First Available Master Barber" role="button" tabindex="0" aria-pressed="true" onclick="selectBarber('First Available Master Barber', 'Any Chair', this)">
               <div class="barber-modal-avatar" style="display:flex;align-items:center;justify-content:center;background:#24201b">
                 <i data-lucide="zap" style="color:var(--gold);width:22px;height:22px"></i>
               </div>
@@ -827,7 +838,7 @@
               </div>
             </div>
 
-            <div class="barber-modal-card" onclick="selectBarber('Marcus Rivera', 'Head Barber / Fade Specialist', this)">
+            <div class="barber-modal-card" data-barber="Marcus Rivera" role="button" tabindex="0" aria-pressed="false" onclick="selectBarber('Marcus Rivera', 'Head Barber / Fade Specialist', this)">
               <div class="barber-modal-avatar">
                 <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80" alt="Marcus" />
               </div>
@@ -837,7 +848,7 @@
               </div>
             </div>
 
-            <div class="barber-modal-card" onclick="selectBarber('Jake Thompson', 'Senior Barber / Beard Sculptor', this)">
+            <div class="barber-modal-card" data-barber="Jake Thompson" role="button" tabindex="0" aria-pressed="false" onclick="selectBarber('Jake Thompson', 'Senior Barber / Beard Sculptor', this)">
               <div class="barber-modal-avatar">
                 <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80" alt="Jake" />
               </div>
@@ -847,7 +858,7 @@
               </div>
             </div>
 
-            <div class="barber-modal-card" onclick="selectBarber('D\'Angelo Brooks', 'Style & Creative Specialist', this)">
+            <div class="barber-modal-card" data-barber="D'Angelo Brooks" role="button" tabindex="0" aria-pressed="false" onclick="selectBarber('D\'Angelo Brooks', 'Style & Creative Specialist', this)">
               <div class="barber-modal-avatar">
                 <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=120&q=80" alt="D'Angelo" />
               </div>
@@ -949,14 +960,14 @@
   </div>
 
   <!-- ═══════════════════ MY APPOINTMENTS MODAL ═══════════════════ -->
-  <div class="modal-overlay" id="myAppointmentsModal">
+  <div class="modal-overlay" id="myAppointmentsModal" role="dialog" aria-modal="true" aria-labelledby="myAppointmentsTitle">
     <div class="booking-modal-box" style="max-width:540px">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:10px">
           <i data-lucide="calendar-check" style="width:20px;height:20px;color:var(--gold)"></i>
-          <h3>Programările Tale Active</h3>
+          <h3 id="myAppointmentsTitle">Programările Tale Active</h3>
         </div>
-        <button class="modal-close-btn" onclick="closeMyAppointments()"><i data-lucide="x"></i></button>
+        <button class="modal-close-btn" onclick="closeMyAppointments()" aria-label="Închide programările mele"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body">
         <div id="appointmentsList" class="appointments-list">
@@ -969,7 +980,8 @@
     </div>
   </div>
 
-  <!-- Application Script -->
+  <!-- Application Scripts (core must load before app) -->
+  <script src="js/core.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

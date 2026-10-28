@@ -1,258 +1,84 @@
 /**
  * ==========================================================================
  * FADE & BLADE — Premium Barbershop & Grooming Lounge
- * Main Application Logic (js/app.js)
+ * Main application logic (js/app.js)
+ * Depends on js/core.js loaded first.
  * ==========================================================================
  */
 
-// ── Default 12 Gallery Items Seed ───────────────────────────────────────────
-const DEFAULT_GALLERY = [
-  {
-    id: 1,
-    title: 'Zero Skin Fade & Textured Crop',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=900&q=80',
-    featured: true
-  },
-  {
-    id: 2,
-    title: 'Precision Beard Sculpting & Razor Edge',
-    category: 'beard',
-    categoryLabel: 'Beard Sculpt',
-    barber: 'Jake Thompson',
-    imageUrl: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 3,
-    title: 'Traditional Hot Towel Straight Razor Shave',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 4,
-    title: 'Modern Textured Pompadour',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 5,
-    title: 'Downtown Lounge Heritage Interior',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Fade & Blade',
-    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 6,
-    title: 'High Taper with Natural Waves',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 7,
-    title: 'Razor Sharp Lineup & Beard Gradient',
-    category: 'beard',
-    categoryLabel: 'Beard Sculpt',
-    barber: 'Jake Thompson',
-    imageUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 8,
-    title: 'Executive Scissor Crop & Side Part',
-    category: 'classic',
-    categoryLabel: 'Classic Cuts',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 9,
-    title: 'Geometric Hair Art & Bleached Contrast',
-    category: 'modern',
-    categoryLabel: 'Modern Art',
-    barber: 'D\'Angelo Brooks',
-    imageUrl: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 10,
-    title: 'Mid Drop Fade with Textured Top',
-    category: 'fade',
-    categoryLabel: 'Skin Fades',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 11,
-    title: 'Vintage Apothecary & Razor Station',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Fade & Blade',
-    imageUrl: 'https://images.unsplash.com/photo-1567894340315-735d7c361db0?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  },
-  {
-    id: 12,
-    title: 'Precision Master Barber in Action',
-    category: 'shop',
-    categoryLabel: 'Shop Vibe',
-    barber: 'Marcus Rivera',
-    imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80',
-    featured: false
-  }
-];
+let bookingState = {
+  step: 1,
+  service: 'Classic Haircut',
+  price: 35,
+  duration: '45 min',
+  durationMinutes: 45,
+  barber: FIRST_AVAILABLE,
+  date: '',
+  slot: '',
+  name: '',
+  phone: '',
+  email: '',
+  notes: '',
+  code: '',
+  confirmed: null,
+  finalizing: false
+};
 
-// All Barbers Roster
-const ALL_BARBERS = ['Marcus Rivera', 'Jake Thompson', 'D\'Angelo Brooks'];
-
-// Standard Daily Slots
-const STANDARD_SLOTS = [
-  '09:00 AM',
-  '10:00 AM',
-  '11:00 AM',
-  '12:00 PM',
-  '01:00 PM',
-  '02:00 PM',
-  '03:00 PM',
-  '04:00 PM',
-  '05:00 PM',
-  '06:00 PM',
-  '07:00 PM'
-];
+let revealObserver = null;
+let galleryFilter = 'all';
+let lastFocusedElement = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Initialize Seed Data
-  initSeedStorage();
+  ensureSeedData();
 
-  // 2. Initialize Lucide Icons
   if (window.lucide) {
     lucide.createIcons();
   }
 
-  // 3. Real-Time Shop Open/Closed Status
   initShopStatus();
-
-  // 4. Navbar & Mobile Drawer
   initNavigation();
-
-  // 5. Before & After Comparison Slider
+  initRevealAnimations();
   initTransformationSlider();
-
-  // 6. Dynamic Gallery & Lightbox
   renderDynamicGallery();
   initGalleryFilterTabs();
-
-  // 7. Booking System & Slot Availability Engine
+  initGalleryInteractions();
   initBookingSystem();
-
-  // 8. Web Audio Ambient Soundscape
   initSoundscape();
+  initStorageSync();
+  initModalBehavior();
 });
 
-/* ── 1. Storage Initialization ───────────────────────────────────────────── */
-function initSeedStorage() {
-  if (!localStorage.getItem('fb_gallery_items')) {
-    localStorage.setItem('fb_gallery_items', JSON.stringify(DEFAULT_GALLERY));
-  }
-  if (!localStorage.getItem('fb_appointments')) {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const seedBookings = [
-      {
-        id: 1001,
-        code: 'FB-4102',
-        name: 'Victor Danilov',
-        phone: '(555) 345-9821',
-        email: 'victor@example.com',
-        service: 'Classic Haircut',
-        price: 35,
-        barber: 'Marcus Rivera',
-        date: today,
-        slot: '10:00 AM',
-        status: 'confirmed',
-        notes: 'Keep hair longer on crown, mid taper'
-      },
-      {
-        id: 1002,
-        code: 'FB-8821',
-        name: 'Stefan Popov',
-        phone: '(555) 789-1122',
-        email: 'stefan@example.com',
-        service: 'Beard Sculpting',
-        price: 25,
-        barber: 'Jake Thompson',
-        date: today,
-        slot: '01:00 PM',
-        status: 'confirmed',
-        notes: 'Beard line-up with sharp razor edge'
-      },
-      {
-        id: 1003,
-        code: 'FB-9310',
-        name: 'Mihai Cazacu',
-        phone: '(555) 654-7788',
-        email: 'mihai@example.com',
-        service: 'Signature Skin Fade',
-        price: 40,
-        barber: 'Marcus Rivera',
-        date: tomorrow,
-        slot: '10:00 AM',
-        status: 'confirmed',
-        notes: 'Zero foil skin fade'
-      }
-    ];
-    localStorage.setItem('fb_appointments', JSON.stringify(seedBookings));
-  }
-}
+/* ── Shop open / closed status ───────────────────────────────────────────── */
 
-/* ── 2. Real-Time Shop Open / Closed Calculator ─────────────────────────── */
 function initShopStatus() {
   function updateShopStatus() {
     const now = new Date();
-    const day = now.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    const currentTimeVal = hour + minute / 60;
+    const day = now.getDay();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const schedule = SHOP_SCHEDULE[day];
 
     let isOpen = false;
     let closeTime = '';
     let nextOpen = '';
 
-    if (day >= 1 && day <= 5) {
-      if (currentTimeVal >= 9 && currentTimeVal < 20) {
-        isOpen = true;
-        closeTime = '8:00 PM';
-      } else {
-        nextOpen = currentTimeVal < 9 ? 'Azi la 9:00 AM' : 'Mâine la 9:00 AM';
-      }
-    } else if (day === 6) {
-      if (currentTimeVal >= 8 && currentTimeVal < 18) {
-        isOpen = true;
-        closeTime = '6:00 PM';
-      } else {
-        nextOpen = currentTimeVal < 8 ? 'Azi la 8:00 AM' : 'Duminică la 10:00 AM';
-      }
-    } else if (day === 0) {
-      if (currentTimeVal >= 10 && currentTimeVal < 16) {
-        isOpen = true;
-        closeTime = '4:00 PM';
-      } else {
-        nextOpen = currentTimeVal < 10 ? 'Azi la 10:00 AM' : 'Luni la 9:00 AM';
+    if (schedule && currentMinutes >= schedule.open && currentMinutes < schedule.close) {
+      isOpen = true;
+      closeTime = minutesToTimeLabel(schedule.close);
+    } else {
+      for (let offset = 0; offset < 7; offset += 1) {
+        const candidate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+        const candidateSchedule = SHOP_SCHEDULE[candidate.getDay()];
+        if (!candidateSchedule) continue;
+
+        if (offset === 0 && currentMinutes < candidateSchedule.open) {
+          nextOpen = `Azi la ${minutesToTimeLabel(candidateSchedule.open)}`;
+          break;
+        }
+        if (offset > 0) {
+          const dayLabel = offset === 1 ? 'Mâine' : candidateSchedule.label;
+          nextOpen = `${dayLabel} la ${minutesToTimeLabel(candidateSchedule.open)}`;
+          break;
+        }
       }
     }
 
@@ -262,31 +88,26 @@ function initShopStatus() {
     const boxStatusText = document.getElementById('boxStatusText');
 
     if (navStatusEl && navTextEl) {
-      if (isOpen) {
-        navStatusEl.className = 'live-status-pill open';
-        navTextEl.textContent = `DESCHIS ACUM • Închide la ${closeTime}`;
-      } else {
-        navStatusEl.className = 'live-status-pill closed';
-        navTextEl.textContent = `ÎNCHIS • Deschide ${nextOpen}`;
-      }
+      navStatusEl.className = `live-status-pill ${isOpen ? 'open' : 'closed'}`;
+      navTextEl.textContent = isOpen
+        ? `DESCHIS ACUM • Închide la ${closeTime}`
+        : `ÎNCHIS • Deschide ${nextOpen}`;
     }
 
     if (boxStatusPill && boxStatusText) {
-      if (isOpen) {
-        boxStatusPill.className = 'live-status-pill open';
-        boxStatusText.textContent = `Deschis Acum până la ${closeTime}`;
-      } else {
-        boxStatusPill.className = 'live-status-pill closed';
-        boxStatusText.textContent = `Deschide ${nextOpen}`;
-      }
+      boxStatusPill.className = `live-status-pill ${isOpen ? 'open' : 'closed'}`;
+      boxStatusText.textContent = isOpen
+        ? `Deschis Acum până la ${closeTime}`
+        : `Deschide ${nextOpen}`;
     }
   }
 
   updateShopStatus();
-  setInterval(updateShopStatus, 60000);
+  window.setInterval(updateShopStatus, 60000);
 }
 
-/* ── 3. Navigation & Mobile Drawer ──────────────────────────────────────── */
+/* ── Navigation, mobile drawer & reveal animations ───────────────────────── */
+
 function initNavigation() {
   const navbar = document.getElementById('navbar');
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -294,24 +115,20 @@ function initNavigation() {
   const backdrop = document.getElementById('drawerBackdrop');
   const drawerCloseBtn = document.getElementById('drawerCloseBtn');
 
-  // Navbar scroll background
   window.addEventListener('scroll', () => {
-    if (navbar) {
-      navbar.classList.toggle('scrolled', window.scrollY > 40);
-    }
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
   }, { passive: true });
 
-  // Mobile Drawer Open / Close
   function openDrawer() {
     if (drawer) drawer.classList.add('active');
     if (backdrop) backdrop.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    syncBodyScrollLock();
   }
 
   function closeDrawer() {
     if (drawer) drawer.classList.remove('active');
     if (backdrop) backdrop.classList.remove('active');
-    document.body.style.overflow = '';
+    syncBodyScrollLock();
   }
 
   if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openDrawer);
@@ -320,358 +137,345 @@ function initNavigation() {
 
   window.closeMobileDrawer = closeDrawer;
 
-  // Smooth scroll links with navbar offset
   document.querySelectorAll('a[href^="#"]').forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener('click', event => {
       const targetId = link.getAttribute('href');
-      if (targetId && targetId !== '#') {
-        const target = document.querySelector(targetId);
-        if (target) {
-          e.preventDefault();
-          closeDrawer();
-          const offset = 80;
-          const y = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-      }
+      if (!targetId || targetId === '#') return;
+      const target = document.querySelector(targetId);
+      if (!target) return;
+      event.preventDefault();
+      closeDrawer();
+      const offset = 80;
+      const y = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     });
   });
+}
 
-  // Reveal Animations
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
-      }
+function initRevealAnimations() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    return;
+  }
+
+  revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
     });
   }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
-  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  observeRevealElements();
 }
 
-/* ── 4. Before & After Transformation Slider ────────────────────────────── */
+function observeRevealElements() {
+  const elements = document.querySelectorAll('.reveal:not(.visible)');
+  if (!elements.length) return;
+
+  if (!revealObserver) {
+    elements.forEach(el => el.classList.add('visible'));
+    return;
+  }
+  elements.forEach(el => revealObserver.observe(el));
+}
+
+/* ── Before & after comparison slider ────────────────────────────────────── */
+
 function initTransformationSlider() {
-  const comparisonSlider = document.getElementById('comparisonSlider');
-  const comparisonBefore = document.getElementById('comparisonBefore');
-  const comparisonHandle = document.getElementById('comparisonHandle');
+  const slider = document.getElementById('comparisonSlider');
+  const before = document.getElementById('comparisonBefore');
+  const handle = document.getElementById('comparisonHandle');
+  if (!slider || !before || !handle) return;
 
-  if (!comparisonSlider || !comparisonBefore || !comparisonHandle) return;
+  let percent = 50;
+  let dragging = false;
 
-  let isDragging = false;
-
-  function updateSlider(clientX) {
-    const rect = comparisonSlider.getBoundingClientRect();
-    let x = clientX - rect.left;
-    x = Math.max(0, Math.min(x, rect.width));
-    const percent = (x / rect.width) * 100;
-    comparisonBefore.style.width = `${percent}%`;
-    comparisonHandle.style.left = `${percent}%`;
+  function setPercent(value) {
+    percent = Math.max(0, Math.min(100, value));
+    before.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+    handle.style.left = `${percent}%`;
+    slider.setAttribute('aria-valuenow', String(Math.round(percent)));
   }
 
-  comparisonSlider.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    updateSlider(e.clientX);
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    updateSlider(e.clientX);
-  });
-
-  window.addEventListener('mouseup', () => { isDragging = false; });
-
-  comparisonSlider.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    if (e.touches[0]) updateSlider(e.touches[0].clientX);
-  }, { passive: true });
-
-  window.addEventListener('touchmove', (e) => {
-    if (!isDragging || !e.touches[0]) return;
-    updateSlider(e.touches[0].clientX);
-  }, { passive: true });
-
-  window.addEventListener('touchend', () => { isDragging = false; });
-}
-
-/* ── 5. Dynamic Gallery & Lightbox ───────────────────────────────────────── */
-function getGalleryData() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_gallery_items') || '[]');
-  } catch(e) {
-    return DEFAULT_GALLERY;
+  function updateFromClientX(clientX) {
+    const rect = slider.getBoundingClientRect();
+    if (!rect.width) return;
+    setPercent(((clientX - rect.left) / rect.width) * 100);
   }
+
+  slider.addEventListener('pointerdown', event => {
+    dragging = true;
+    if (slider.setPointerCapture) {
+      try { slider.setPointerCapture(event.pointerId); } catch (error) { /* ignore */ }
+    }
+    updateFromClientX(event.clientX);
+  });
+
+  slider.addEventListener('pointermove', event => {
+    if (dragging) updateFromClientX(event.clientX);
+  });
+
+  const stopDragging = () => { dragging = false; };
+  slider.addEventListener('pointerup', stopDragging);
+  slider.addEventListener('pointercancel', stopDragging);
+  window.addEventListener('pointerup', stopDragging);
+
+  slider.addEventListener('keydown', event => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      setPercent(percent - 2);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      setPercent(percent + 2);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setPercent(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      setPercent(100);
+    }
+  });
+
+  setPercent(50);
 }
+
+/* ── Dynamic gallery & lightbox ──────────────────────────────────────────── */
 
 function renderDynamicGallery() {
-  const gallery = getGalleryData();
+  const gallery = getStoredGallery();
   const grid = document.getElementById('galleryGrid');
   if (!grid) return;
 
-  grid.innerHTML = gallery.map((item, idx) => {
-    const isFeatured = idx === 0 || item.featured;
+  if (gallery.length === 0) {
+    grid.innerHTML = '<div class="gallery-empty"><i data-lucide="image-off"></i><p>Galerie goală. Adaugă fotografii din panoul de administrare.</p></div>';
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  grid.innerHTML = gallery.map((item, index) => {
+    const isFeatured = index === 0 || item.featured;
+    const itemId = Number.isFinite(Number(item.id)) ? Number(item.id) : index;
+    const categoryLabel = item.categoryLabel || GALLERY_CATEGORIES[item.category] || item.category || 'Portofoliu';
+
     return `
-      <div class="gallery-item reveal ${isFeatured ? 'featured' : ''}" data-category="${item.category}" onclick="openLightbox('${item.imageUrl}', '${escapeAttr(item.title)}', '${escapeAttr(item.categoryLabel || item.category)} • ${escapeAttr(item.barber)}')">
-        <img src="${item.imageUrl}" alt="${item.title}" loading="lazy" />
+      <div class="gallery-item reveal ${isFeatured ? 'featured' : ''}"
+           data-gallery-id="${itemId}"
+           data-category="${escapeAttr(item.category)}"
+           role="button"
+           tabindex="0"
+           aria-label="${escapeAttr(item.title)} — vezi imaginea">
+        <img src="${escapeAttr(item.imageUrl)}" alt="${escapeAttr(item.title)}" loading="lazy" />
         <div class="gallery-zoom-badge"><i data-lucide="maximize-2"></i></div>
         <div class="gallery-overlay">
-          <h4>${item.title}</h4>
-          <span>${item.categoryLabel || item.category} • ${item.barber}</span>
+          <h4>${escapeHtml(item.title)}</h4>
+          <span>${escapeHtml(categoryLabel)} • ${escapeHtml(item.barber)}</span>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  applyGalleryFilter(galleryFilter);
+  observeRevealElements();
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function applyGalleryFilter(filter) {
+  galleryFilter = filter || 'all';
+  document.querySelectorAll('.gallery-item').forEach(item => {
+    const matches = galleryFilter === 'all' || item.getAttribute('data-category') === galleryFilter;
+    item.style.display = matches ? '' : 'none';
+  });
 }
 
 function initGalleryFilterTabs() {
-  const filterBtns = document.querySelectorAll('.filter-btn');
-
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.getAttribute('data-filter');
-
-      const galleryItems = document.querySelectorAll('.gallery-item');
-      galleryItems.forEach(item => {
-        const cat = item.getAttribute('data-category');
-        if (filter === 'all' || cat === filter) {
-          item.style.display = 'block';
-        } else {
-          item.style.display = 'none';
-        }
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  filterButtons.forEach(button => {
+    button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
+    button.addEventListener('click', () => {
+      filterButtons.forEach(other => {
+        other.classList.remove('active');
+        other.setAttribute('aria-pressed', 'false');
       });
+      button.classList.add('active');
+      button.setAttribute('aria-pressed', 'true');
+      applyGalleryFilter(button.getAttribute('data-filter'));
     });
   });
+}
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeLightbox();
-      closeBookingModal();
-      closeMyAppointments();
-    }
+function initGalleryInteractions() {
+  const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+
+  function activateCard(card) {
+    const id = Number(card.getAttribute('data-gallery-id'));
+    const item = getStoredGallery().find(entry => Number(entry.id) === id);
+    if (!item) return;
+    const categoryLabel = item.categoryLabel || GALLERY_CATEGORIES[item.category] || item.category;
+    openLightbox(item.imageUrl, item.title, `${categoryLabel} • ${item.barber}`);
+  }
+
+  grid.addEventListener('click', event => {
+    const card = event.target.closest('.gallery-item');
+    if (card) activateCard(card);
+  });
+
+  grid.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target.closest('.gallery-item');
+    if (!card) return;
+    event.preventDefault();
+    activateCard(card);
   });
 }
 
 function openLightbox(imgSrc, title, subtitle) {
   const modal = document.getElementById('lightboxModal');
   const img = document.getElementById('lightboxImg');
-  const t = document.getElementById('lightboxTitle');
-  const s = document.getElementById('lightboxSubtitle');
+  const titleEl = document.getElementById('lightboxTitle');
+  const subtitleEl = document.getElementById('lightboxSubtitle');
 
   if (img) img.src = imgSrc;
-  if (t) t.textContent = title;
-  if (s) s.textContent = subtitle;
-  if (modal) modal.classList.add('active');
+  if (titleEl) titleEl.textContent = title;
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+  openOverlay(modal);
 }
 
 function closeLightbox() {
-  const modal = document.getElementById('lightboxModal');
-  if (modal) modal.classList.remove('active');
+  closeOverlay(document.getElementById('lightboxModal'));
 }
 
-/* ── 6. Booking System with Real-Time Slot Availability ─────────────────── */
-let bookingState = {
-  step: 1,
-  service: 'Classic Haircut',
-  price: 35,
-  duration: '45 min',
-  barber: 'First Available Master Barber',
-  date: '',
-  slot: '09:00 AM',
-  name: '',
-  phone: '',
-  email: '',
-  notes: '',
-  code: ''
-};
+/* ── Booking system ──────────────────────────────────────────────────────── */
 
 function initBookingSystem() {
   const dateInput = document.getElementById('bookingDate');
-  if (dateInput) {
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.min = today;
+  const today = getLocalISODate();
+  const tomorrow = shiftISODate(today, 1);
 
-    // Default to tomorrow
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    dateInput.value = tomorrow;
-    bookingState.date = tomorrow;
+  if (dateInput) {
+    dateInput.min = today;
+    dateInput.max = shiftISODate(today, 120);
+    if (!dateInput.value) dateInput.value = tomorrow;
+    bookingState.date = dateInput.value;
 
     dateInput.addEventListener('change', () => {
       bookingState.date = dateInput.value;
       renderAvailableSlots();
+    });
+  } else {
+    bookingState.date = tomorrow;
+  }
+
+  const slotsGrid = document.getElementById('slotsGrid');
+  if (slotsGrid) {
+    slotsGrid.addEventListener('click', event => {
+      const slotEl = event.target.closest('[data-slot]');
+      if (slotEl) selectSlot(slotEl.getAttribute('data-slot'), slotEl);
+    });
+    slotsGrid.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const slotEl = event.target.closest('[data-slot]');
+      if (!slotEl) return;
+      event.preventDefault();
+      selectSlot(slotEl.getAttribute('data-slot'), slotEl);
     });
   }
 
   updateApptCount();
 
   const openApptsBtn = document.getElementById('openMyAppointmentsBtn');
-  if (openApptsBtn) {
-    openApptsBtn.addEventListener('click', openMyAppointments);
-  }
-}
-
-/**
- * Checks if a slot on a specific date is booked for the given barber.
- * Also checks blocked hours from the Admin panel!
- */
-function isSlotBooked(date, slot, barberName) {
-  const appointments = getStoredAppointments();
-  const blockedSlots = getStoredBlockedSlots();
-
-  // 1. Check Admin Blocked Slots
-  const isBlocked = blockedSlots.some(b => {
-    if (b.date !== date || b.slot !== slot) return false;
-    if (barberName === 'First Available Master Barber') return true;
-    return b.barber === barberName;
-  });
-  if (isBlocked) return true;
-
-  // 2. Check Existing Appointments
-  if (barberName === 'First Available Master Barber') {
-    // If all 3 barbers are booked at this date and slot, it's unavailable
-    const bookedBarbersAtTime = appointments
-      .filter(a => a.date === date && a.slot === slot && a.status !== 'cancelled')
-      .map(a => a.barber);
-
-    const allBooked = ALL_BARBERS.every(b => bookedBarbersAtTime.includes(b));
-    return allBooked;
-  } else {
-    // Specific barber
-    return appointments.some(a =>
-      a.date === date &&
-      a.slot === slot &&
-      a.barber === barberName &&
-      a.status !== 'cancelled'
-    );
-  }
-}
-
-function getStoredAppointments() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_appointments') || '[]');
-  } catch(e) {
-    return [];
-  }
-}
-
-function getStoredBlockedSlots() {
-  try {
-    return JSON.parse(localStorage.getItem('fb_blocked_slots') || '[]');
-  } catch(e) {
-    return [];
-  }
-}
-
-/**
- * Dynamically renders the slots grid checking real-time availability.
- * If a slot is booked on that date for that barber, it gets the .booked class,
- * is crossed out and shows an "Ocupat" tag.
- */
-function renderAvailableSlots() {
-  const grid = document.getElementById('slotsGrid');
-  if (!grid) return;
-
-  const date = bookingState.date;
-  const barber = bookingState.barber;
-
-  let firstAvailableSlot = null;
-
-  grid.innerHTML = STANDARD_SLOTS.map(slot => {
-    const booked = isSlotBooked(date, slot, barber);
-    const isSelected = !booked && bookingState.slot === slot;
-
-    if (!booked && !firstAvailableSlot) {
-      firstAvailableSlot = slot;
-    }
-
-    if (booked) {
-      return `
-        <div class="time-slot booked" title="Acest interval este deja ocupat">
-          <span>${slot}</span>
-          <span class="slot-badge-booked">Ocupat</span>
-        </div>
-      `;
-    } else {
-      return `
-        <div class="time-slot ${isSelected ? 'selected' : ''}" onclick="selectSlot('${slot}', this)">
-          <span>${slot}</span>
-        </div>
-      `;
-    }
-  }).join('');
-
-  // If current slot became booked, auto-select the next available slot
-  if (isSlotBooked(date, bookingState.slot, barber)) {
-    bookingState.slot = firstAvailableSlot || '';
-    if (firstAvailableSlot) {
-      const availableDivs = grid.querySelectorAll('.time-slot:not(.booked)');
-      if (availableDivs.length > 0) {
-        availableDivs[0].classList.add('selected');
-      }
-    }
-  }
+  if (openApptsBtn) openApptsBtn.addEventListener('click', openMyAppointments);
 }
 
 function openBookingModal(preService, prePrice, preBarber) {
   if (preService) {
-    bookingState.service = preService;
-    bookingState.price = parseInt(prePrice, 10) || 35;
-    document.querySelectorAll('.choice-card').forEach(c => {
-      const h4 = c.querySelector('h4');
-      if (h4 && h4.textContent.trim().toLowerCase().includes(preService.toLowerCase())) {
-        c.classList.add('selected');
-      } else {
-        c.classList.remove('selected');
-      }
-    });
+    const service = getService(preService) || {
+      name: preService,
+      price: Number(prePrice) || 35,
+      duration: 60
+    };
+    bookingState.service = service.name;
+    bookingState.price = service.price;
+    bookingState.durationMinutes = service.duration;
+    bookingState.duration = `${service.duration} min`;
+  } else if (!getService(bookingState.service)) {
+    const fallback = SERVICES[0];
+    bookingState.service = fallback.name;
+    bookingState.price = fallback.price;
+    bookingState.durationMinutes = fallback.duration;
+    bookingState.duration = `${fallback.duration} min`;
   }
 
-  if (preBarber) {
+  if (preBarber && (preBarber === FIRST_AVAILABLE || ALL_BARBERS.includes(preBarber))) {
     bookingState.barber = preBarber;
-    document.querySelectorAll('.barber-modal-card').forEach(b => {
-      const h4 = b.querySelector('h4');
-      if (h4 && h4.textContent.includes(preBarber)) {
-        b.classList.add('selected');
-      } else {
-        b.classList.remove('selected');
-      }
-    });
   }
 
+  bookingState.confirmed = null;
+  bookingState.code = '';
+
+  const today = getLocalISODate();
+  if (!bookingState.date || bookingState.date < today) {
+    bookingState.date = shiftISODate(today, 1);
+  }
+
+  const dateInput = document.getElementById('bookingDate');
+  if (dateInput) {
+    dateInput.min = today;
+    dateInput.max = shiftISODate(today, 120);
+    dateInput.value = bookingState.date;
+  }
+
+  syncServiceSelection();
+  syncBarberSelection();
   setModalStep(1);
   updateModalSummary();
   renderAvailableSlots();
-
-  const modal = document.getElementById('bookingModal');
-  if (modal) modal.classList.add('active');
+  openOverlay(document.getElementById('bookingModal'));
 }
 
 function closeBookingModal() {
-  const modal = document.getElementById('bookingModal');
-  if (modal) modal.classList.remove('active');
+  closeOverlay(document.getElementById('bookingModal'));
+}
+
+function syncServiceSelection() {
+  document.querySelectorAll('.choice-card').forEach(card => {
+    const name = card.getAttribute('data-service')
+      || (card.querySelector('h4') ? card.querySelector('h4').textContent.trim() : '');
+    const selected = name === bookingState.service;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+}
+
+function syncBarberSelection() {
+  document.querySelectorAll('.barber-modal-card').forEach(card => {
+    const name = card.getAttribute('data-barber')
+      || (card.querySelector('h4') ? card.querySelector('h4').textContent.trim() : '');
+    const selected = name === bookingState.barber;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
 }
 
 function setModalStep(step) {
   bookingState.step = step;
-  for (let i = 1; i <= 5; i++) {
-    const pane = document.getElementById(`stepPane${i}`);
-    const indicator = document.getElementById(`stepIndicator${i}`);
-    if (pane) pane.classList.toggle('active', i === step);
+
+  for (let index = 1; index <= 5; index += 1) {
+    const pane = document.getElementById(`stepPane${index}`);
+    const indicator = document.getElementById(`stepIndicator${index}`);
+    if (pane) pane.classList.toggle('active', index === step);
     if (indicator) {
-      indicator.classList.toggle('active', i === step);
-      indicator.classList.toggle('completed', i < step);
+      indicator.classList.toggle('active', index === step);
+      indicator.classList.toggle('completed', index < step);
     }
   }
 
   const prevBtn = document.getElementById('prevStepBtn');
   const nextBtn = document.getElementById('nextStepBtn');
-
   if (!prevBtn || !nextBtn) return;
+
+  nextBtn.disabled = false;
 
   if (step === 1) {
     prevBtn.style.visibility = 'hidden';
@@ -694,25 +498,69 @@ function setModalStep(step) {
     prevBtn.style.visibility = 'hidden';
     nextBtn.textContent = 'Finalizează & Închide';
     nextBtn.onclick = closeBookingModal;
+    const summaryEl = document.getElementById('modalSummaryText');
+    if (summaryEl) {
+      summaryEl.textContent = `Cod: ${(bookingState.confirmed && bookingState.confirmed.code) || bookingState.code}`;
+    }
   }
 }
 
 function modalNextStep() {
+  if (bookingState.step === 1) {
+    if (!getService(bookingState.service)) {
+      alert('Vă rugăm să alegeți un serviciu din listă.');
+      return;
+    }
+    setModalStep(2);
+    updateModalSummary();
+    return;
+  }
+
+  if (bookingState.step === 2) {
+    setModalStep(3);
+    updateModalSummary();
+    return;
+  }
+
   if (bookingState.step === 3) {
     const dateInput = document.getElementById('bookingDate');
-    if (dateInput && dateInput.value) {
-      bookingState.date = dateInput.value;
+    const date = dateInput ? dateInput.value : bookingState.date;
+
+    if (!date) {
+      alert('Vă rugăm să alegeți data programării.');
+      return;
+    }
+    if (date < getLocalISODate()) {
+      alert('Data selectată este în trecut. Alege o dată viitoare.');
+      return;
     }
     if (!bookingState.slot) {
       alert('Vă rugăm să alegeți un interval orar disponibil din listă.');
       return;
     }
-    // Verify once again before proceeding
-    if (isSlotBooked(bookingState.date, bookingState.slot, bookingState.barber)) {
+
+    bookingState.date = date;
+    const status = getSlotStatus(date, bookingState.slot, bookingState.barber, bookingState.service);
+
+    if (status.status === 'booked') {
       alert('Ora selectată tocmai a fost ocupată. Vă rugăm să alegeți o altă oră disponibilă.');
       renderAvailableSlots();
       return;
     }
+    if (status.status === 'closed') {
+      alert('Ora selectată este în afara programului salonului pentru data respectivă.');
+      renderAvailableSlots();
+      return;
+    }
+    if (status.status === 'past') {
+      alert('Ora selectată a trecut deja. Alege o altă oră.');
+      renderAvailableSlots();
+      return;
+    }
+
+    setModalStep(4);
+    updateModalSummary();
+    return;
   }
 
   if (bookingState.step === 4) {
@@ -725,24 +573,31 @@ function modalNextStep() {
     const phone = phoneInput ? phoneInput.value.trim() : '';
     const email = emailInput ? emailInput.value.trim() : '';
 
-    if (!name) {
+    if (name.length < 2) {
       alert('Vă rugăm să introduceți numele și prenumele.');
       if (nameInput) nameInput.focus();
       return;
     }
 
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length < 6) {
+      alert('Vă rugăm să introduceți un număr de telefon valid.');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Vă rugăm să introduceți o adresă de email validă.');
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
     bookingState.name = name;
-    bookingState.phone = phone || '(555) 234-5678';
-    bookingState.email = email || 'client@example.com';
+    bookingState.phone = phone;
+    bookingState.email = email;
     bookingState.notes = notesInput ? notesInput.value.trim() : '';
 
     finalizeBooking();
-    return;
-  }
-
-  if (bookingState.step < 4) {
-    setModalStep(bookingState.step + 1);
-    updateModalSummary();
   }
 }
 
@@ -753,189 +608,366 @@ function modalPrevStep() {
   }
 }
 
-function selectService(name, price, dur, el) {
-  bookingState.service = name;
-  bookingState.price = price;
-  bookingState.duration = dur;
-  document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
-  if (el) el.classList.add('selected');
-  updateModalSummary();
-}
+function selectService(name, price, duration) {
+  const service = getService(name);
+  bookingState.service = service ? service.name : name;
+  bookingState.price = service ? service.price : (Number(price) || 0);
+  bookingState.durationMinutes = service ? service.duration : (parseInt(duration, 10) || 60);
+  bookingState.duration = `${bookingState.durationMinutes} min`;
 
-function selectBarber(name, role, el) {
-  bookingState.barber = name;
-  document.querySelectorAll('.barber-modal-card').forEach(c => c.classList.remove('selected'));
-  if (el) el.classList.add('selected');
+  syncServiceSelection();
   updateModalSummary();
   renderAvailableSlots();
 }
 
-function selectSlot(slot, el) {
+function selectBarber(name) {
+  if (name !== FIRST_AVAILABLE && !ALL_BARBERS.includes(name)) return;
+  bookingState.barber = name;
+  syncBarberSelection();
+  updateModalSummary();
+  renderAvailableSlots();
+}
+
+function selectSlot(slot, element) {
+  const status = getSlotStatus(bookingState.date, slot, bookingState.barber, bookingState.service);
+  if (status.status !== 'available') {
+    renderAvailableSlots();
+    return;
+  }
+
   bookingState.slot = slot;
-  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-  if (el) el.classList.add('selected');
+  document.querySelectorAll('.time-slot.selected').forEach(el => {
+    el.classList.remove('selected');
+    el.setAttribute('aria-pressed', 'false');
+  });
+  if (element) {
+    element.classList.add('selected');
+    element.setAttribute('aria-pressed', 'true');
+  }
 }
 
 function updateModalSummary() {
   const textEl = document.getElementById('modalSummaryText');
-  if (textEl) {
-    const barberFirst = bookingState.barber.split(' ')[0];
-    textEl.textContent = `$${bookingState.price} • ${bookingState.service} (${barberFirst})`;
-  }
+  if (!textEl) return;
+  const barberLabel = bookingState.barber === FIRST_AVAILABLE
+    ? 'Primul liber'
+    : bookingState.barber.split(' ')[0];
+  textEl.textContent = `$${bookingState.price} • ${bookingState.service} • ${bookingState.durationMinutes} min (${barberLabel})`;
 }
 
-function finalizeBooking() {
-  const code = 'FB-' + Math.floor(1000 + Math.random() * 9000);
-  bookingState.code = code;
+function renderAvailableSlots() {
+  const grid = document.getElementById('slotsGrid');
+  if (!grid) return;
 
-  // Resolve "First Available" to a specific free barber
-  let assignedBarber = bookingState.barber;
-  if (assignedBarber === 'First Available Master Barber') {
-    const appointments = getStoredAppointments();
-    const freeBarber = ALL_BARBERS.find(b =>
-      !appointments.some(a => a.date === bookingState.date && a.slot === bookingState.slot && a.barber === b && a.status !== 'cancelled')
-    );
-    assignedBarber = freeBarber || ALL_BARBERS[0];
+  if (!bookingState.date) {
+    grid.innerHTML = '<div class="slots-empty">Alege mai întâi o dată pentru a vedea orele disponibile.</div>';
+    return;
   }
 
-  const finalRecord = {
-    ...bookingState,
-    barber: assignedBarber,
-    id: Date.now(),
-    status: 'confirmed'
-  };
+  const currentStatus = bookingState.slot
+    ? getSlotStatus(bookingState.date, bookingState.slot, bookingState.barber, bookingState.service)
+    : null;
+  const currentAvailable = currentStatus && currentStatus.status === 'available';
 
-  // 1. Save to LocalStorage
-  const list = getStoredAppointments();
-  list.unshift(finalRecord);
-  localStorage.setItem('fb_appointments', JSON.stringify(list));
-  updateApptCount();
+  let firstAvailable = null;
+  const rows = STANDARD_SLOTS.map(slot => {
+    const info = getSlotStatus(bookingState.date, slot, bookingState.barber, bookingState.service);
+    const isAvailable = info.status === 'available';
 
-  // 2. Populate confirmation ticket
-  const codeEl = document.getElementById('ticketCode');
-  const clientEl = document.getElementById('ticketClient');
-  const serviceEl = document.getElementById('ticketService');
-  const barberEl = document.getElementById('ticketBarber');
-  const dateTimeEl = document.getElementById('ticketDateTime');
-  const priceEl = document.getElementById('ticketPrice');
+    if (isAvailable && !firstAvailable) firstAvailable = slot;
 
-  if (codeEl) codeEl.textContent = code;
-  if (clientEl) clientEl.textContent = finalRecord.name;
-  if (serviceEl) serviceEl.textContent = finalRecord.service;
-  if (barberEl) barberEl.textContent = finalRecord.barber;
-  if (dateTimeEl) dateTimeEl.textContent = `${finalRecord.date} la ${finalRecord.slot}`;
-  if (priceEl) priceEl.textContent = `$${finalRecord.price}.00`;
+    if (isAvailable) {
+      const selected = bookingState.slot === slot;
+      return `
+        <div class="time-slot ${selected ? 'selected' : ''}"
+             data-slot="${escapeAttr(slot)}"
+             role="button"
+             tabindex="0"
+             aria-pressed="${selected ? 'true' : 'false'}"
+             aria-label="${escapeAttr(slot)} — disponibil">
+          <span>${escapeHtml(slot)}</span>
+        </div>`;
+    }
 
-  // 3. Google Calendar link
-  const gCalBtn = document.getElementById('googleCalBtn');
-  if (gCalBtn) {
-    const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Fade & Blade: ' + finalRecord.service)}&dates=${finalRecord.date.replace(/-/g, '')}T140000Z/${finalRecord.date.replace(/-/g, '')}T150000Z&details=${encodeURIComponent('Programare cu ' + finalRecord.barber + ' la Fade & Blade Barbershop. Cod: ' + code)}&location=${encodeURIComponent('142 Main St, Downtown Arts District')}`;
-    gCalBtn.href = gCalUrl;
+    return `
+      <div class="time-slot ${info.status}" aria-disabled="true">
+        <span>${escapeHtml(slot)}</span>
+        <span class="slot-badge-${info.status}">${escapeHtml(info.label)}</span>
+      </div>`;
+  });
+
+  if (!firstAvailable) {
+    rows.push('<div class="slots-empty">Nu mai sunt ore disponibile pentru data selectată. Alege altă zi sau alt frizer.</div>');
   }
 
-  // 4. Update the slots grid immediately
-  renderAvailableSlots();
+  grid.innerHTML = rows.join('');
 
-  setModalStep(5);
-}
+  if (!currentAvailable) {
+    bookingState.slot = firstAvailable || '';
+  }
 
-function downloadCalendarFile() {
-  const icsContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Fade and Blade Barbershop//RO',
-    'BEGIN:VEVENT',
-    `SUMMARY:Fade & Blade - ${bookingState.service}`,
-    `DESCRIPTION:Programare cu ${bookingState.barber}. Cod Confirmare: ${bookingState.code}`,
-    'LOCATION:142 Main St, Downtown Arts District',
-    `DTSTART:${bookingState.date.replace(/-/g, '')}T140000Z`,
-    `DTEND:${bookingState.date.replace(/-/g, '')}T150000Z`,
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n');
-
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.setAttribute('download', `fade_blade_${bookingState.code}.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-/* ── My Appointments Modal ───────────────────────────────────────────────── */
-function updateApptCount() {
-  const list = getStoredAppointments();
-  const countEl = document.getElementById('myApptCount');
-  if (countEl) {
-    const active = list.filter(a => a.status === 'confirmed');
-    if (active.length > 0) {
-      countEl.textContent = active.length;
-      countEl.style.display = 'inline-block';
-    } else {
-      countEl.style.display = 'none';
+  if (bookingState.slot) {
+    const selectedEl = grid.querySelector(`[data-slot="${bookingState.slot}"]`);
+    if (selectedEl) {
+      selectedEl.classList.add('selected');
+      selectedEl.setAttribute('aria-pressed', 'true');
     }
   }
 }
 
-function openMyAppointments() {
-  const list = getStoredAppointments();
+function finalizeBooking() {
+  if (bookingState.finalizing) return;
+
+  const date = bookingState.date;
+  const status = getSlotStatus(date, bookingState.slot, bookingState.barber, bookingState.service);
+  if (status.status !== 'available') {
+    alert('Ora selectată nu mai este disponibilă. Alege alt interval.');
+    setModalStep(3);
+    renderAvailableSlots();
+    return;
+  }
+
+  bookingState.finalizing = true;
+
+  try {
+    const existing = getStoredAppointments();
+    let assignedBarber = bookingState.barber;
+
+    if (assignedBarber === FIRST_AVAILABLE) {
+      assignedBarber = findAvailableBarber(date, bookingState.slot, bookingState.service);
+    }
+
+    if (!assignedBarber) {
+      alert('Nu mai există niciun frizer disponibil la ora selectată. Alege alt interval.');
+      setModalStep(3);
+      renderAvailableSlots();
+      return;
+    }
+
+    const service = getService(bookingState.service);
+    const durationMinutes = service ? service.duration : bookingState.durationMinutes;
+
+    const record = {
+      id: generateId(),
+      code: generateBookingCode(existing),
+      clientId: getClientId(),
+      name: bookingState.name,
+      phone: bookingState.phone,
+      email: bookingState.email,
+      service: bookingState.service,
+      price: bookingState.price,
+      duration: `${durationMinutes} min`,
+      durationMinutes,
+      barber: assignedBarber,
+      date,
+      slot: bookingState.slot,
+      status: 'confirmed',
+      notes: bookingState.notes,
+      createdAt: new Date().toISOString()
+    };
+
+    const saved = setStoredAppointments([record, ...existing]);
+    if (!saved) {
+      alert('Programarea nu a putut fi salvată în acest browser. Verifică dacă ai spațiu liber în stocarea locală.');
+      return;
+    }
+
+    bookingState.confirmed = record;
+    bookingState.barber = assignedBarber;
+    bookingState.code = record.code;
+    bookingState.duration = record.duration;
+    bookingState.durationMinutes = record.durationMinutes;
+
+    updateApptCount();
+    populateTicket(record);
+
+    const gCalBtn = document.getElementById('googleCalBtn');
+    if (gCalBtn) gCalBtn.href = buildGoogleCalendarUrl(record);
+
+    renderAvailableSlots();
+    setModalStep(5);
+  } finally {
+    bookingState.finalizing = false;
+  }
+}
+
+function populateTicket(record) {
+  const fields = {
+    ticketCode: record.code,
+    ticketClient: record.name,
+    ticketService: record.service,
+    ticketBarber: record.barber,
+    ticketDateTime: `${formatPrettyDate(record.date)} la ${record.slot}`,
+    ticketPrice: formatMoney(record.price)
+  };
+
+  Object.keys(fields).forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = fields[id];
+  });
+}
+
+function buildGoogleCalendarUrl(record) {
+  const start = dateFromISOAndSlot(record.date, record.slot);
+  if (!start) return 'https://calendar.google.com/calendar/render?action=TEMPLATE';
+  const end = new Date(start.getTime() + (Number(record.durationMinutes) || 60) * 60000);
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Fade & Blade: ${record.service}`,
+    dates: `${toUtcStamp(start)}/${toUtcStamp(end)}`,
+    details: `Programare cu ${record.barber}. Cod: ${record.code}. Durată: ${record.durationMinutes} min.`,
+    location: '142 Main St, Downtown Arts District'
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadCalendarFile() {
+  const record = (bookingState.confirmed && bookingState.confirmed.code)
+    ? bookingState.confirmed
+    : null;
+
+  if (!record) {
+    alert('Confirmă mai întâi programarea pentru a putea salva fișierul calendaristic.');
+    return;
+  }
+
+  const start = dateFromISOAndSlot(record.date, record.slot);
+  if (!start) return;
+  const end = new Date(start.getTime() + (Number(record.durationMinutes) || 60) * 60000);
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Fade and Blade Barbershop//RO',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${icsEscape(record.code)}@fadeandblade.local`,
+    `DTSTAMP:${toUtcStamp(new Date())}`,
+    `DTSTART:${toUtcStamp(start)}`,
+    `DTEND:${toUtcStamp(end)}`,
+    `SUMMARY:${icsEscape(`Fade & Blade - ${record.service}`)}`,
+    `DESCRIPTION:${icsEscape(`Programare cu ${record.barber}. Cod: ${record.code}. Durată: ${record.durationMinutes} min.`)}`,
+    `LOCATION:${icsEscape('142 Main St, Downtown Arts District')}`,
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `fade_blade_${record.code}.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+}
+
+/* ── My appointments (filtered by this browser's client id) ─────────────── */
+
+function updateApptCount() {
+  const myId = getClientId();
+  const today = getLocalISODate();
+  const active = getStoredAppointments().filter(appointment =>
+    appointment.clientId === myId
+    && appointment.status === 'confirmed'
+    && appointment.date >= today
+  );
+
+  const countEl = document.getElementById('myApptCount');
+  if (!countEl) return;
+  if (active.length > 0) {
+    countEl.textContent = String(active.length);
+    countEl.style.display = 'inline-block';
+  } else {
+    countEl.textContent = '0';
+    countEl.style.display = 'none';
+  }
+}
+
+function renderMyAppointmentsList() {
   const listEl = document.getElementById('appointmentsList');
   if (!listEl) return;
 
-  listEl.innerHTML = '';
+  const myId = getClientId();
+  const today = getLocalISODate();
+  const appointments = getStoredAppointments()
+    .filter(appointment => appointment.clientId === myId
+      && appointment.status === 'confirmed'
+      && appointment.date >= today)
+    .sort((a, b) => {
+      const startA = parseTimeToMinutes(a.slot);
+      const startB = parseTimeToMinutes(b.slot);
+      const keyA = `${a.date}-${String(Number.isNaN(startA) ? 9999 : startA).padStart(4, '0')}`;
+      const keyB = `${b.date}-${String(Number.isNaN(startB) ? 9999 : startB).padStart(4, '0')}`;
+      return keyA.localeCompare(keyB);
+    });
 
-  if (list.length === 0) {
+  if (appointments.length === 0) {
     listEl.innerHTML = `
-      <div style="text-align:center;padding:36px 16px;color:var(--text-dim)">
-        <i data-lucide="calendar" style="width:36px;height:36px;margin-bottom:12px"></i>
-        <p>Nu aveți nicio programare salvată momentan.</p>
-      </div>
-    `;
+      <div class="appointments-empty">
+        <i data-lucide="calendar"></i>
+        <p>Nu ai nicio programare activă salvată în acest browser.</p>
+      </div>`;
   } else {
-    list.forEach(item => {
-      const isConfirmed = item.status === 'confirmed';
-      const div = document.createElement('div');
-      div.className = 'appointment-item';
-      div.innerHTML = `
+    listEl.innerHTML = appointments.map(appointment => `
+      <div class="appointment-item">
         <div>
-          <div style="font-weight:700;color:#fff;font-size:0.95rem">${item.service}</div>
-          <div style="font-size:0.78rem;color:var(--gold);margin-top:2px">${item.barber} • ${item.date} la ${item.slot}</div>
-          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:4px">
-            Cod: <strong>${item.code}</strong> • $${item.price} • Status: <span style="color:${isConfirmed ? '#86efac' : '#fca5a5'}">${item.status}</span>
+          <div class="appointment-service">${escapeHtml(appointment.service)}</div>
+          <div class="appointment-meta">${escapeHtml(appointment.barber)} • ${escapeHtml(formatPrettyDate(appointment.date))} la ${escapeHtml(appointment.slot)}</div>
+          <div class="appointment-details">
+            Cod: <strong>${escapeHtml(appointment.code)}</strong> • ${escapeHtml(formatMoney(appointment.price))} • Status: <span class="appointment-status">Confirmat</span>
           </div>
         </div>
-        ${isConfirmed ? `
-          <button class="cancel-appt-btn" onclick="cancelAppointment(${item.id})">Anulează</button>
-        ` : ''}
-      `;
-      listEl.appendChild(div);
-    });
+        <button class="cancel-appt-btn" onclick="cancelAppointment(${Number(appointment.id)})">Anulează</button>
+      </div>`).join('');
   }
 
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  if (window.lucide) lucide.createIcons();
+}
 
-  const modal = document.getElementById('myAppointmentsModal');
-  if (modal) modal.classList.add('active');
+function openMyAppointments() {
+  renderMyAppointmentsList();
+  openOverlay(document.getElementById('myAppointmentsModal'));
 }
 
 function closeMyAppointments() {
-  const modal = document.getElementById('myAppointmentsModal');
-  if (modal) modal.classList.remove('active');
+  closeOverlay(document.getElementById('myAppointmentsModal'));
 }
 
 function cancelAppointment(id) {
-  let list = getStoredAppointments();
-  list = list.map(a => a.id === id ? { ...a, status: 'cancelled' } : a);
-  localStorage.setItem('fb_appointments', JSON.stringify(list));
+  const numericId = Number(id);
+  const myId = getClientId();
+  const list = getStoredAppointments();
+  const appointment = list.find(item => Number(item.id) === numericId);
+
+  if (!appointment || appointment.clientId !== myId) {
+    alert('Această programare nu aparține acestui browser.');
+    return;
+  }
+
+  if (!confirm('Sigur vrei să anulezi această programare? Ora va redeveni disponibilă.')) return;
+
+  const updated = list.map(item =>
+    Number(item.id) === numericId ? { ...item, status: 'cancelled' } : item
+  );
+
+  if (!setStoredAppointments(updated)) {
+    alert('Programarea nu a putut fi anulată. Încearcă din nou.');
+    return;
+  }
+
   updateApptCount();
   renderAvailableSlots();
-  openMyAppointments();
+  renderMyAppointmentsList();
 }
 
-/* ── 7. Web Audio Shop Vibe Synthesizer ─────────────────────────────────── */
+/* ── Web Audio ambient soundscape ────────────────────────────────────────── */
+
 let audioCtx = null;
 let isSoundscapePlaying = false;
 let noiseNode = null;
@@ -943,9 +975,7 @@ let chordOscillators = [];
 
 function initSoundscape() {
   const btn = document.getElementById('soundscapeBtn');
-  if (btn) {
-    btn.addEventListener('click', toggleSoundscape);
-  }
+  if (btn) btn.addEventListener('click', toggleSoundscape);
 }
 
 function toggleSoundscape() {
@@ -954,23 +984,22 @@ function toggleSoundscape() {
 
   if (!isSoundscapePlaying) {
     if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioCtx = new AudioContextClass();
     }
     if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
+      audioCtx.resume().catch(() => {});
     }
 
-    // 1. Vinyl Crackle Synth
     const bufferSize = audioCtx.sampleRate * 2;
     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
 
-    for (let i = 0; i < bufferSize; i++) {
-      if (Math.random() < 0.002) {
-        output[i] = (Math.random() * 2 - 1) * 0.4;
-      } else {
-        output[i] = (Math.random() * 2 - 1) * 0.015;
-      }
+    for (let index = 0; index < bufferSize; index += 1) {
+      output[index] = Math.random() < 0.002
+        ? (Math.random() * 2 - 1) * 0.4
+        : (Math.random() * 2 - 1) * 0.015;
     }
 
     noiseNode = audioCtx.createBufferSource();
@@ -989,44 +1018,134 @@ function toggleSoundscape() {
     noiseGain.connect(audioCtx.destination);
     noiseNode.start();
 
-    // 2. Warm Ambient Lofi Chords (D Minor 9 chord: D3, F3, A3, C4, E4)
-    const freqs = [146.83, 174.61, 220.00, 261.63, 329.63];
-    chordOscillators = freqs.map((freq) => {
-      const osc = audioCtx.createOscillator();
+    const frequencies = [146.83, 174.61, 220.00, 261.63, 329.63];
+    chordOscillators = frequencies.map(frequency => {
+      const oscillator = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
       gain.gain.value = 0.025;
-      osc.connect(gain);
+      oscillator.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.start();
-      return { osc, gain };
+      oscillator.start();
+      return { oscillator, gain };
     });
 
     isSoundscapePlaying = true;
-    if (btn) btn.classList.add('playing');
-    if (label) label.textContent = 'Shop Vibe: Redă';
+    if (btn) {
+      btn.classList.add('playing');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+    if (label) label.textContent = 'Shop Vibe: Oprește';
   } else {
     if (noiseNode) {
-      try { noiseNode.stop(); } catch (e) {}
+      try { noiseNode.stop(); } catch (error) { /* already stopped */ }
       noiseNode = null;
     }
-    chordOscillators.forEach(({ osc }) => {
-      try { osc.stop(); } catch (e) {}
+    chordOscillators.forEach(({ oscillator }) => {
+      try { oscillator.stop(); } catch (error) { /* already stopped */ }
     });
     chordOscillators = [];
 
     isSoundscapePlaying = false;
-    if (btn) btn.classList.remove('playing');
+    if (btn) {
+      btn.classList.remove('playing');
+      btn.setAttribute('aria-pressed', 'false');
+    }
     if (label) label.textContent = 'Shop Vibe: Lofi & Vinil';
   }
 }
 
-function escapeAttr(str) {
-  return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+/* ── Cross-tab live sync ─────────────────────────────────────────────────── */
+
+function initStorageSync() {
+  window.addEventListener('storage', event => {
+    if (event.key === FB_KEYS.gallery) {
+      renderDynamicGallery();
+    }
+    if (event.key === FB_KEYS.appointments || event.key === FB_KEYS.blocked) {
+      updateApptCount();
+      renderAvailableSlots();
+      const modal = document.getElementById('myAppointmentsModal');
+      if (modal && modal.classList.contains('active')) renderMyAppointmentsList();
+    }
+  });
 }
 
-// Global window mappings for inline event calls
+/* ── Modal overlay helpers ───────────────────────────────────────────────── */
+
+function syncBodyScrollLock() {
+  const hasOpenOverlay = document.querySelector('.modal-overlay.active, .lightbox-modal.active, .mobile-nav-drawer.active');
+  document.body.classList.toggle('no-scroll', Boolean(hasOpenOverlay));
+}
+
+function openOverlay(overlay) {
+  if (!overlay) return;
+  if (!overlay.classList.contains('active')) {
+    lastFocusedElement = document.activeElement;
+  }
+  overlay.classList.add('active');
+  syncBodyScrollLock();
+
+  const focusTarget = overlay.querySelector('.modal-close-btn, [data-autofocus], button, input, select, textarea, a[href]');
+  if (focusTarget) {
+    window.setTimeout(() => {
+      try { focusTarget.focus(); } catch (error) { /* ignore */ }
+    }, 60);
+  }
+}
+
+function closeOverlay(overlay) {
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  syncBodyScrollLock();
+
+  if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+    try { lastFocusedElement.focus(); } catch (error) { /* ignore */ }
+  }
+}
+
+function initModalBehavior() {
+  const bookingModal = document.getElementById('bookingModal');
+  const appointmentsModal = document.getElementById('myAppointmentsModal');
+  const lightbox = document.getElementById('lightboxModal');
+
+  [bookingModal, appointmentsModal, lightbox].forEach(overlay => {
+    if (!overlay) return;
+    overlay.addEventListener('click', event => {
+      if (event.target !== overlay) return;
+      if (overlay === bookingModal) closeBookingModal();
+      else if (overlay === appointmentsModal) closeMyAppointments();
+      else closeLightbox();
+    });
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    closeLightbox();
+    closeBookingModal();
+    closeMyAppointments();
+    const drawer = document.getElementById('mobileNavDrawer');
+    const backdrop = document.getElementById('drawerBackdrop');
+    if (drawer) drawer.classList.remove('active');
+    if (backdrop) backdrop.classList.remove('active');
+    syncBodyScrollLock();
+  });
+
+  // Make clickable cards usable with the keyboard as well.
+  document.querySelectorAll('.choice-card, .barber-modal-card, .service-card, .social-item').forEach(card => {
+    if (!card.hasAttribute('tabindex')) card.setAttribute('tabindex', '0');
+    if (!card.hasAttribute('role')) card.setAttribute('role', 'button');
+    card.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      card.click();
+    });
+  });
+}
+
+/* ── Global mappings for inline event handlers ───────────────────────────── */
+
 window.openBookingModal = openBookingModal;
 window.closeBookingModal = closeBookingModal;
 window.modalNextStep = modalNextStep;
