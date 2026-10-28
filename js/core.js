@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * FADE & BLADE — Shared core
+ * THESTREETBARBERSHOP — Shared core
  * Constants, storage helpers, date/time utilities and availability engine.
  * Loaded before js/app.js and js/admin.js on both pages.
  * ==========================================================================
@@ -11,7 +11,8 @@ const FB_KEYS = {
   appointments: 'fb_appointments',
   blocked: 'fb_blocked_slots',
   session: 'fb_admin_session',
-  client: 'fb_client_id'
+  client: 'fb_client_id',
+  prices: 'fb_service_prices'
 };
 
 const FIRST_AVAILABLE = 'First Available Master Barber';
@@ -83,6 +84,17 @@ const SERVICE_ALIASES = {
   'Beard Sculpting & Trim': 'Beard Sculpting'
 };
 
+// Every service belongs to one barber. The owner can update its price from the
+// admin panel; the Admin account can update every service.
+const SERVICE_OWNERS = {
+  'Classic Haircut': 'Marcus Rivera',
+  'Signature Skin Fade': 'Marcus Rivera',
+  'Royal Hot Towel Shave': 'Jake Thompson',
+  'Beard Sculpting': 'Jake Thompson',
+  'The Royal Treatment': 'D\'Angelo Brooks',
+  'Freestyle Hair Art & Color': 'D\'Angelo Brooks'
+};
+
 // Minutes from midnight. Every day has a schedule; keep in sync with the
 // programme displayed on the website.
 const SHOP_SCHEDULE = {
@@ -135,7 +147,7 @@ const DEFAULT_GALLERY = [
     id: 5,
     title: 'Downtown Lounge Heritage Interior',
     category: 'shop',
-    barber: 'Fade & Blade',
+    barber: 'TheStreetBarbershop',
     imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80',
     featured: false
   },
@@ -183,7 +195,7 @@ const DEFAULT_GALLERY = [
     id: 11,
     title: 'Vintage Apothecary & Razor Station',
     category: 'shop',
-    barber: 'Fade & Blade',
+    barber: 'TheStreetBarbershop',
     imageUrl: 'https://images.unsplash.com/photo-1567894340315-735d7c361db0?auto=format&fit=crop&w=800&q=80',
     featured: false
   },
@@ -211,6 +223,15 @@ function getService(name) {
   return SERVICES.find(service => service.name === normalized) || null;
 }
 
+function getServiceOwner(name) {
+  return SERVICE_OWNERS[normalizeServiceName(name)] || null;
+}
+
+function getServicePriceOverrides() {
+  const stored = safeGetJSON(FB_KEYS.prices, {});
+  return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+}
+
 function getServiceDuration(name) {
   const service = getService(name);
   return service ? service.duration : 60;
@@ -218,7 +239,21 @@ function getServiceDuration(name) {
 
 function getServicePrice(name) {
   const service = getService(name);
-  return service ? service.price : 0;
+  if (!service) return 0;
+
+  const overrides = getServicePriceOverrides();
+  const override = Number(overrides[service.name]);
+  return Number.isFinite(override) && override >= 0 ? override : service.price;
+}
+
+function setServicePrice(name, value) {
+  const service = getService(name);
+  const amount = Number(value);
+  if (!service || !Number.isFinite(amount) || amount < 0 || amount > 10000) return false;
+
+  const overrides = getServicePriceOverrides();
+  overrides[service.name] = Math.round(amount * 100) / 100;
+  return safeSetJSON(FB_KEYS.prices, overrides);
 }
 
 /* ── Formatting helpers ──────────────────────────────────────────────────── */
@@ -343,7 +378,7 @@ function safeGetJSON(key, fallback) {
     const parsed = JSON.parse(raw);
     return parsed == null ? fallback : parsed;
   } catch (error) {
-    console.warn(`[Fade & Blade] Nu am putut citi "${key}" din localStorage.`, error);
+    console.warn(`[TheStreetBarbershop] Nu am putut citi "${key}" din localStorage.`, error);
     return fallback;
   }
 }
@@ -353,7 +388,7 @@ function safeSetJSON(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
-    console.warn(`[Fade & Blade] Nu am putut salva "${key}" în localStorage.`, error);
+    console.warn(`[TheStreetBarbershop] Nu am putut salva "${key}" în localStorage.`, error);
     return false;
   }
 }
@@ -413,10 +448,10 @@ function generateId() {
 function generateBookingCode(existingAppointments = []) {
   const used = new Set((existingAppointments || []).map(item => item.code));
   for (let attempt = 0; attempt < 60; attempt += 1) {
-    const code = `FB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const code = `TSB-${Math.floor(1000 + Math.random() * 9000)}`;
     if (!used.has(code)) return code;
   }
-  return `FB-${Date.now().toString().slice(-6)}`;
+  return `TSB-${Date.now().toString().slice(-6)}`;
 }
 
 /* ── Seed data (same in public site and admin panel) ─────────────────────── */
@@ -436,14 +471,14 @@ function getSeedAppointments() {
   return [
     {
       id: 1001,
-      code: 'FB-4102',
+      code: 'TSB-4102',
       clientId: 'seed-client',
       isSeed: true,
       name: 'Victor Danilov',
       phone: '(555) 345-9821',
       email: 'victor@example.com',
       service: classic.name,
-      price: classic.price,
+      price: getServicePrice(classic.name),
       duration: `${classic.duration} min`,
       durationMinutes: classic.duration,
       barber: 'Marcus Rivera',
@@ -454,14 +489,14 @@ function getSeedAppointments() {
     },
     {
       id: 1002,
-      code: 'FB-8821',
+      code: 'TSB-8821',
       clientId: 'seed-client',
       isSeed: true,
       name: 'Stefan Popov',
       phone: '(555) 789-1122',
       email: 'stefan@example.com',
       service: beard.name,
-      price: beard.price,
+      price: getServicePrice(beard.name),
       duration: `${beard.duration} min`,
       durationMinutes: beard.duration,
       barber: 'Jake Thompson',
@@ -472,14 +507,14 @@ function getSeedAppointments() {
     },
     {
       id: 1003,
-      code: 'FB-9310',
+      code: 'TSB-9310',
       clientId: 'seed-client',
       isSeed: true,
       name: 'Mihai Cazacu',
       phone: '(555) 654-7788',
       email: 'mihai@example.com',
       service: fade.name,
-      price: fade.price,
+      price: getServicePrice(fade.name),
       duration: `${fade.duration} min`,
       durationMinutes: fade.duration,
       barber: 'Marcus Rivera',
@@ -490,14 +525,14 @@ function getSeedAppointments() {
     },
     {
       id: 1004,
-      code: 'FB-6502',
+      code: 'TSB-6502',
       clientId: 'seed-client',
       isSeed: true,
       name: 'Alexei Rusu',
       phone: '(555) 432-8899',
       email: 'alexei@example.com',
       service: royal.name,
-      price: royal.price,
+      price: getServicePrice(royal.name),
       duration: `${royal.duration} min`,
       durationMinutes: royal.duration,
       barber: 'D\'Angelo Brooks',
@@ -517,6 +552,7 @@ function ensureSeedData() {
   } else {
     const normalized = storedGallery.map(item => ({
       ...item,
+      barber: item.barber === 'Fade & Blade' ? 'TheStreetBarbershop' : item.barber,
       categoryLabel: GALLERY_CATEGORIES[item.category] || item.categoryLabel || item.category || 'Portofoliu'
     }));
     if (JSON.stringify(normalized) !== JSON.stringify(storedGallery)) {
@@ -557,6 +593,12 @@ function ensureSeedData() {
   // 3. Blocked slots
   if (!Array.isArray(safeGetJSON(FB_KEYS.blocked, null))) {
     safeSetJSON(FB_KEYS.blocked, []);
+  }
+
+  // 4. Service price overrides
+  const storedPrices = safeGetJSON(FB_KEYS.prices, null);
+  if (!storedPrices || typeof storedPrices !== 'object' || Array.isArray(storedPrices)) {
+    safeSetJSON(FB_KEYS.prices, {});
   }
 }
 

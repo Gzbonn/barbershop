@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * FADE & BLADE — Premium Barbershop & Grooming Lounge
+ * THESTREETBARBERSHOP — Premium Barbershop & Grooming Lounge
  * Main application logic (js/app.js)
  * Depends on js/core.js loaded first.
  * ==========================================================================
@@ -9,7 +9,7 @@
 let bookingState = {
   step: 1,
   service: 'Classic Haircut',
-  price: 35,
+  price: typeof getServicePrice === 'function' ? getServicePrice('Classic Haircut') : 35,
   duration: '45 min',
   durationMinutes: 45,
   barber: FIRST_AVAILABLE,
@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDynamicGallery();
   initGalleryFilterTabs();
   initGalleryInteractions();
+  syncServicePrices();
   initBookingSystem();
-  initSoundscape();
   initStorageSync();
   initModalBehavior();
 });
@@ -346,6 +346,29 @@ function closeLightbox() {
   closeOverlay(document.getElementById('lightboxModal'));
 }
 
+/* ── Service prices (kept in sync with the admin panel) ──────────────────── */
+
+function syncServicePrices() {
+  document.querySelectorAll('[data-service-price]').forEach(element => {
+    const service = getService(element.getAttribute('data-service-price'));
+    if (!service) return;
+    element.innerHTML = `${formatMoney(getServicePrice(service.name))} <small>/ ${service.duration} min</small>`;
+  });
+
+  document.querySelectorAll('[data-service-link]').forEach(link => {
+    const service = getService(link.getAttribute('data-service-link'));
+    if (!service) return;
+    const label = link.getAttribute('data-service-label') || service.name;
+    link.textContent = `${label} (${formatMoney(getServicePrice(service.name))})`;
+  });
+
+  document.querySelectorAll('.choice-card[data-service]').forEach(card => {
+    const service = getService(card.getAttribute('data-service'));
+    const priceEl = card.querySelector('.price');
+    if (service && priceEl) priceEl.textContent = formatMoney(getServicePrice(service.name));
+  });
+}
+
 /* ── Booking system ──────────────────────────────────────────────────────── */
 
 function initBookingSystem() {
@@ -396,15 +419,20 @@ function openBookingModal(preService, prePrice, preBarber) {
       duration: 60
     };
     bookingState.service = service.name;
-    bookingState.price = service.price;
     bookingState.durationMinutes = service.duration;
     bookingState.duration = `${service.duration} min`;
   } else if (!getService(bookingState.service)) {
-    const fallback = SERVICES[0];
-    bookingState.service = fallback.name;
-    bookingState.price = fallback.price;
-    bookingState.durationMinutes = fallback.duration;
-    bookingState.duration = `${fallback.duration} min`;
+    bookingState.service = SERVICES[0].name;
+  }
+
+  // Always read the latest price so admin/barber price changes are reflected.
+  const selectedService = getService(bookingState.service);
+  if (selectedService) {
+    bookingState.price = getServicePrice(selectedService.name);
+    bookingState.durationMinutes = selectedService.duration;
+    bookingState.duration = `${selectedService.duration} min`;
+  } else {
+    bookingState.price = Number(prePrice) || 0;
   }
 
   if (preBarber && (preBarber === FIRST_AVAILABLE || ALL_BARBERS.includes(preBarber))) {
@@ -492,7 +520,7 @@ function setModalStep(step) {
     renderAvailableSlots();
   } else if (step === 4) {
     prevBtn.style.visibility = 'visible';
-    nextBtn.textContent = `Confirmă Programarea ($${bookingState.price})`;
+    nextBtn.textContent = `Confirmă Programarea (${formatMoney(bookingState.price)})`;
     nextBtn.onclick = modalNextStep;
   } else if (step === 5) {
     prevBtn.style.visibility = 'hidden';
@@ -611,7 +639,7 @@ function modalPrevStep() {
 function selectService(name, price, duration) {
   const service = getService(name);
   bookingState.service = service ? service.name : name;
-  bookingState.price = service ? service.price : (Number(price) || 0);
+  bookingState.price = service ? getServicePrice(service.name) : (Number(price) || 0);
   bookingState.durationMinutes = service ? service.duration : (parseInt(duration, 10) || 60);
   bookingState.duration = `${bookingState.durationMinutes} min`;
 
@@ -652,7 +680,7 @@ function updateModalSummary() {
   const barberLabel = bookingState.barber === FIRST_AVAILABLE
     ? 'Primul liber'
     : bookingState.barber.split(' ')[0];
-  textEl.textContent = `$${bookingState.price} • ${bookingState.service} • ${bookingState.durationMinutes} min (${barberLabel})`;
+  textEl.textContent = `${formatMoney(bookingState.price)} • ${bookingState.service} • ${bookingState.durationMinutes} min (${barberLabel})`;
 }
 
 function renderAvailableSlots() {
@@ -814,7 +842,7 @@ function buildGoogleCalendarUrl(record) {
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `Fade & Blade: ${record.service}`,
+    text: `TheStreetBarbershop: ${record.service}`,
     dates: `${toUtcStamp(start)}/${toUtcStamp(end)}`,
     details: `Programare cu ${record.barber}. Cod: ${record.code}. Durată: ${record.durationMinutes} min.`,
     location: '142 Main St, Downtown Arts District'
@@ -840,15 +868,15 @@ function downloadCalendarFile() {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Fade and Blade Barbershop//RO',
+    'PRODID:-//TheStreetBarbershop//RO',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${icsEscape(record.code)}@fadeandblade.local`,
+    `UID:${icsEscape(record.code)}@thestreetbarbershop.local`,
     `DTSTAMP:${toUtcStamp(new Date())}`,
     `DTSTART:${toUtcStamp(start)}`,
     `DTEND:${toUtcStamp(end)}`,
-    `SUMMARY:${icsEscape(`Fade & Blade - ${record.service}`)}`,
+    `SUMMARY:${icsEscape(`TheStreetBarbershop - ${record.service}`)}`,
     `DESCRIPTION:${icsEscape(`Programare cu ${record.barber}. Cod: ${record.code}. Durată: ${record.durationMinutes} min.`)}`,
     `LOCATION:${icsEscape('142 Main St, Downtown Arts District')}`,
     'STATUS:CONFIRMED',
@@ -860,7 +888,7 @@ function downloadCalendarFile() {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `fade_blade_${record.code}.ics`);
+  link.setAttribute('download', `thestreetbarbershop_${record.code}.ics`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -966,96 +994,6 @@ function cancelAppointment(id) {
   renderMyAppointmentsList();
 }
 
-/* ── Web Audio ambient soundscape ────────────────────────────────────────── */
-
-let audioCtx = null;
-let isSoundscapePlaying = false;
-let noiseNode = null;
-let chordOscillators = [];
-
-function initSoundscape() {
-  const btn = document.getElementById('soundscapeBtn');
-  if (btn) btn.addEventListener('click', toggleSoundscape);
-}
-
-function toggleSoundscape() {
-  const btn = document.getElementById('soundscapeBtn');
-  const label = document.getElementById('soundscapeLabel');
-
-  if (!isSoundscapePlaying) {
-    if (!audioCtx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-      audioCtx = new AudioContextClass();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-
-    const bufferSize = audioCtx.sampleRate * 2;
-    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-
-    for (let index = 0; index < bufferSize; index += 1) {
-      output[index] = Math.random() < 0.002
-        ? (Math.random() * 2 - 1) * 0.4
-        : (Math.random() * 2 - 1) * 0.015;
-    }
-
-    noiseNode = audioCtx.createBufferSource();
-    noiseNode.buffer = noiseBuffer;
-    noiseNode.loop = true;
-
-    const noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 1800;
-
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.value = 0.35;
-
-    noiseNode.connect(noiseFilter);
-    noiseFilter.connect(noiseGain);
-    noiseGain.connect(audioCtx.destination);
-    noiseNode.start();
-
-    const frequencies = [146.83, 174.61, 220.00, 261.63, 329.63];
-    chordOscillators = frequencies.map(frequency => {
-      const oscillator = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = frequency;
-      gain.gain.value = 0.025;
-      oscillator.connect(gain);
-      gain.connect(audioCtx.destination);
-      oscillator.start();
-      return { oscillator, gain };
-    });
-
-    isSoundscapePlaying = true;
-    if (btn) {
-      btn.classList.add('playing');
-      btn.setAttribute('aria-pressed', 'true');
-    }
-    if (label) label.textContent = 'Shop Vibe: Oprește';
-  } else {
-    if (noiseNode) {
-      try { noiseNode.stop(); } catch (error) { /* already stopped */ }
-      noiseNode = null;
-    }
-    chordOscillators.forEach(({ oscillator }) => {
-      try { oscillator.stop(); } catch (error) { /* already stopped */ }
-    });
-    chordOscillators = [];
-
-    isSoundscapePlaying = false;
-    if (btn) {
-      btn.classList.remove('playing');
-      btn.setAttribute('aria-pressed', 'false');
-    }
-    if (label) label.textContent = 'Shop Vibe: Lofi & Vinil';
-  }
-}
-
 /* ── Cross-tab live sync ─────────────────────────────────────────────────── */
 
 function initStorageSync() {
@@ -1068,6 +1006,12 @@ function initStorageSync() {
       renderAvailableSlots();
       const modal = document.getElementById('myAppointmentsModal');
       if (modal && modal.classList.contains('active')) renderMyAppointmentsList();
+    }
+    if (event.key === FB_KEYS.prices) {
+      syncServicePrices();
+      const currentService = getService(bookingState.service);
+      if (currentService) bookingState.price = getServicePrice(currentService.name);
+      updateModalSummary();
     }
   });
 }
@@ -1159,5 +1103,4 @@ window.closeMyAppointments = closeMyAppointments;
 window.cancelAppointment = cancelAppointment;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
-window.toggleSoundscape = toggleSoundscape;
 window.renderDynamicGallery = renderDynamicGallery;

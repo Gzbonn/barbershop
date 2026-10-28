@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * FADE & BLADE — Admin & Barber Management Portal
+ * THESTREETBARBERSHOP — Admin & Barber Management Portal
  * JavaScript controller (js/admin.js)
  * Depends on js/core.js loaded first.
  * ==========================================================================
@@ -9,28 +9,34 @@
 // Demo accounts. This is a front-end demo — real authentication requires a
 // server-side backend.
 const BARBERS = {
-  '1': {
+  'barber1': {
     id: '1',
-    username: '1',
+    username: 'barber1',
+    aliases: ['barber 1', '1'],
     password: '1',
+    accountLabel: 'Barber 1',
     name: 'Marcus Rivera',
     role: 'Founder & Head Barber',
     specialty: 'Skin Fade & Geometry Specialist',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80'
   },
-  '2': {
+  'barber2': {
     id: '2',
-    username: '2',
+    username: 'barber2',
+    aliases: ['barber 2', '2'],
     password: '2',
+    accountLabel: 'Barber 2',
     name: 'Jake Thompson',
     role: 'Senior Barber',
     specialty: 'Beard Sculptor & Hot Razor Expert',
     avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80'
   },
-  '3': {
+  'barber3': {
     id: '3',
-    username: '3',
+    username: 'barber3',
+    aliases: ['barber 3', '3'],
     password: '3',
+    accountLabel: 'Barber 3',
     name: 'D\'Angelo Brooks',
     role: 'Style Specialist',
     specialty: 'Scissor Texture & Color Artisan',
@@ -39,9 +45,11 @@ const BARBERS = {
   'admin': {
     id: 'admin',
     username: 'admin',
+    aliases: ['administrator'],
     password: 'admin',
-    name: 'Master Admin',
-    role: 'Shop Manager',
+    accountLabel: 'Admin',
+    name: 'Admin',
+    role: 'Shop Manager — Control Total',
     specialty: 'All Barbers & Floor Operations',
     avatar: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=120&q=80'
   }
@@ -78,14 +86,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── Authentication ──────────────────────────────────────────────────────── */
 
+function findBarberAccount(value) {
+  const key = String(value == null ? '' : value).trim().toLowerCase();
+  if (!key) return null;
+  const compact = key.replace(/\s+/g, '');
+
+  return Object.values(BARBERS).find(account => {
+    const candidates = [
+      account.username,
+      account.id,
+      account.accountLabel,
+      ...(account.aliases || [])
+    ].map(item => String(item || '').toLowerCase());
+
+    return candidates.includes(key) || candidates.some(item => item.replace(/\s+/g, '') === compact);
+  }) || null;
+}
+
 function toSession(barber) {
+  const provided = barber || {};
+  const account = findBarberAccount(provided.username) || findBarberAccount(provided.id) || provided;
+
   return {
-    id: barber.id,
-    username: barber.username,
-    name: barber.name,
-    role: barber.role,
-    specialty: barber.specialty,
-    avatar: barber.avatar
+    id: account.id || provided.id,
+    username: account.username || provided.username || '',
+    accountLabel: provided.accountLabel
+      || account.accountLabel
+      || (provided.id === 'admin' ? 'Admin' : provided.name),
+    name: provided.name || account.name,
+    role: provided.role || account.role,
+    specialty: provided.specialty || account.specialty,
+    avatar: provided.avatar || account.avatar
   };
 }
 
@@ -115,23 +146,28 @@ function handleLoginSubmit(event) {
   const passwordInput = document.getElementById('password');
   const errorBox = document.getElementById('loginError');
 
-  const username = usernameInput ? usernameInput.value.trim().toLowerCase() : '';
+  const username = usernameInput ? usernameInput.value.trim() : '';
   const password = passwordInput ? passwordInput.value.trim() : '';
-  const barber = BARBERS[username];
+  const barber = findBarberAccount(username);
 
-  if (barber && barber.password === password) {
+  const passwordMatches = Boolean(barber) && (
+    barber.password.toLowerCase() === password.toLowerCase()
+    || barber.username.toLowerCase() === password.toLowerCase()
+  );
+
+  if (barber && passwordMatches) {
     if (errorBox) errorBox.style.display = 'none';
     currentSession = toSession(barber);
     sessionStorage.setItem(FB_KEYS.session, JSON.stringify(currentSession));
     showDashboard();
   } else if (errorBox) {
-    errorBox.textContent = 'Credențiale invalide. Folosește user 1, 2, 3 sau admin, cu parola corespunzătoare.';
+    errorBox.textContent = 'Credențiale invalide. Conturi: Barber 1 (parola 1), Barber 2 (parola 2), Barber 3 (parola 3), Admin (parola admin).';
     errorBox.style.display = 'block';
   }
 }
 
 function quickLogin(userId) {
-  const barber = BARBERS[userId];
+  const barber = findBarberAccount(userId) || BARBERS[userId];
   if (!barber) return;
 
   const usernameInput = document.getElementById('username');
@@ -158,6 +194,86 @@ function showLoginForm() {
   syncAdminBodyLock();
 }
 
+function isAdminSession() {
+  return Boolean(currentSession && currentSession.id === 'admin');
+}
+
+function getAccountLabel(session = currentSession) {
+  if (!session) return '';
+  if (session.accountLabel) return session.accountLabel;
+  const account = findBarberAccount(session.username) || findBarberAccount(session.id);
+  return account ? account.accountLabel : session.name;
+}
+
+function getOwnedServices(session = currentSession) {
+  if (!session) return [];
+  return SERVICES.filter(service => getServiceOwner(service.name) === session.name);
+}
+
+function canEditServicePrice(serviceName) {
+  if (!currentSession) return false;
+  if (isAdminSession()) return true;
+  return getServiceOwner(serviceName) === currentSession.name;
+}
+
+function getBarberAccountLabel(barberName) {
+  const account = Object.values(BARBERS).find(item => item.name === barberName);
+  return account ? `${account.accountLabel} · ${account.name}` : barberName;
+}
+
+function requireAdmin() {
+  if (isAdminSession()) return true;
+  alert('Această acțiune este disponibilă doar contului Admin. Conturile de frizer pot doar vizualiza datele și modifica prețurile serviciilor proprii.');
+  return false;
+}
+
+function applyPermissions() {
+  const admin = isAdminSession();
+  const toggle = (id, visible) => {
+    const element = document.getElementById(id);
+    if (element) element.classList.toggle('is-hidden', !visible);
+  };
+
+  toggle('walkInBtn', admin);
+  toggle('galleryToolbarActions', admin);
+  toggle('scheduleBlockCard', admin);
+
+  const schedulePane = document.getElementById('tabSchedule');
+  const scheduleSplit = schedulePane ? schedulePane.querySelector('.admin-split') : null;
+  if (scheduleSplit) scheduleSplit.style.gridTemplateColumns = admin ? '' : '1fr';
+
+  const badge = document.getElementById('adminModeBadge');
+  if (badge) badge.textContent = admin ? 'Admin Portal' : 'Doar Vizualizare';
+
+  const notice = document.getElementById('barberNotice');
+  const noticeText = document.getElementById('barberNoticeText');
+  if (notice && noticeText) {
+    if (admin) {
+      notice.style.display = 'none';
+    } else {
+      const owned = getOwnedServices().map(service => service.name).join(', ') || 'niciun serviciu';
+      noticeText.textContent = `${getAccountLabel()} — ai acces doar la vizualizare. Poți modifica prețurile serviciilor tale: ${owned}.`;
+      notice.style.display = 'flex';
+    }
+  }
+}
+
+function syncWalkInServiceOptions() {
+  const select = document.getElementById('walkInService');
+  if (!select) return;
+
+  const previous = select.value ? select.value.split('|')[0] : '';
+  select.innerHTML = SERVICES.map(service => {
+    const price = getServicePrice(service.name);
+    return `<option value="${escapeAttr(`${service.name}|${price}`)}">${escapeHtml(service.name)} — ${escapeHtml(formatMoney(price))}</option>`;
+  }).join('');
+
+  if (previous) {
+    const match = Array.from(select.options).find(option => option.value.split('|')[0] === previous);
+    if (match) select.value = match.value;
+  }
+}
+
 function showDashboard() {
   if (!currentSession) {
     showLoginForm();
@@ -174,18 +290,24 @@ function showDashboard() {
   const avatarEl = document.getElementById('activeBarberAvatar');
   const filterSelect = document.getElementById('barberFilter');
 
-  if (nameEl) nameEl.textContent = currentSession.name;
+  if (nameEl) {
+    nameEl.textContent = isAdminSession()
+      ? 'Admin'
+      : `${getAccountLabel()} · ${currentSession.name}`;
+  }
   if (roleEl) roleEl.textContent = currentSession.role;
   if (avatarEl) avatarEl.src = currentSession.avatar;
 
   if (filterSelect) {
-    if (currentSession.id !== 'admin' && ALL_BARBERS.includes(currentSession.name)) {
+    if (!isAdminSession() && ALL_BARBERS.includes(currentSession.name)) {
       filterSelect.value = currentSession.name;
     } else {
       filterSelect.value = 'all';
     }
   }
 
+  applyPermissions();
+  syncWalkInServiceOptions();
   renderDashboardStats();
   renderAppointmentsTable();
   renderGalleryManager();
@@ -274,6 +396,7 @@ function setText(id, value) {
 /* ── Appointments management ─────────────────────────────────────────────── */
 
 function saveStoredAppointments(list) {
+  if (!isAdminSession()) return false;
   if (!setStoredAppointments(list)) {
     alert('Programările nu au putut fi salvate în browser. Verifică spațiul disponibil.');
     return false;
@@ -368,7 +491,7 @@ function renderAppointmentsTable() {
         </td>
         <td>
           <div class="table-actions">
-            ${item.status === 'confirmed' ? `
+            ${isAdminSession() && item.status === 'confirmed' ? `
               <button class="btn-action-icon" title="Marchează Finalizat" onclick="markAppointmentCompleted(${itemId})">
                 <i data-lucide="check" style="width:16px;height:16px;color:#22c55e"></i>
               </button>
@@ -378,9 +501,10 @@ function renderAppointmentsTable() {
             <button class="btn-action-icon" title="Detalii / Note" onclick="showApptNotesById(${itemId})">
               <i data-lucide="file-text" style="width:16px;height:16px"></i>
             </button>
-            <button class="btn-action-icon danger" title="Șterge Definitiv" onclick="deleteAppointmentPermanent(${itemId})">
-              <i data-lucide="trash-2" style="width:16px;height:16px"></i>
-            </button>
+            ${isAdminSession() ? `
+              <button class="btn-action-icon danger" title="Șterge Definitiv" onclick="deleteAppointmentPermanent(${itemId})">
+                <i data-lucide="trash-2" style="width:16px;height:16px"></i>
+              </button>` : ''}
           </div>
         </td>
       </tr>`;
@@ -395,6 +519,7 @@ function appointmentSortKey(appointment) {
 }
 
 function markAppointmentCompleted(id) {
+  if (!requireAdmin()) return;
   const numericId = Number(id);
   const updated = getStoredAppointments().map(appointment =>
     Number(appointment.id) === numericId ? { ...appointment, status: 'completed' } : appointment
@@ -403,6 +528,7 @@ function markAppointmentCompleted(id) {
 }
 
 function cancelAppointmentAdmin(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Ești sigur că vrei să anulezi programarea? Ora va redeveni imediat disponibilă pentru clienți.')) return;
 
   const numericId = Number(id);
@@ -413,6 +539,7 @@ function cancelAppointmentAdmin(id) {
 }
 
 function deleteAppointmentPermanent(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Ștergi definitiv această înregistrare din baza de date?')) return;
 
   const numericId = Number(id);
@@ -433,8 +560,12 @@ function showApptNotesById(id) {
 /* ── Manual walk-in booking ──────────────────────────────────────────────── */
 
 function openWalkInModal() {
+  if (!requireAdmin()) return;
+
   const modal = document.getElementById('walkInModal');
   const today = getLocalISODate();
+
+  syncWalkInServiceOptions();
 
   ['walkInName', 'walkInPhone', 'walkInNotes'].forEach(id => {
     const input = document.getElementById(id);
@@ -462,6 +593,8 @@ function closeWalkInModal() {
 }
 
 function saveWalkInBooking() {
+  if (!requireAdmin()) return;
+
   const name = valueOf('walkInName');
   const phone = valueOf('walkInPhone');
   const serviceValue = valueOf('walkInService');
@@ -551,6 +684,7 @@ function valueOf(id) {
 /* ── Gallery management ──────────────────────────────────────────────────── */
 
 function saveStoredGallery(list) {
+  if (!isAdminSession()) return false;
   if (!setStoredGallery(list)) {
     alert('Galeria nu a putut fi salvată în browser.');
     return false;
@@ -584,12 +718,13 @@ function renderGalleryManager() {
             <p>Autor: <strong>${escapeHtml(item.barber || '—')}</strong></p>
           </div>
           <div class="admin-gallery-actions">
-            <button class="btn-primary" style="padding:8px;font-size:0.75rem" onclick="openEditPhotoModal(${itemId})">
-              Editează
-            </button>
-            <button class="btn-header-action" style="padding:8px" title="Șterge" onclick="deleteGalleryPhoto(${itemId})">
-              <i data-lucide="trash-2" style="width:14px;height:14px;color:#f87171"></i>
-            </button>
+            ${isAdminSession() ? `
+              <button class="btn-primary" style="padding:8px;font-size:0.75rem" onclick="openEditPhotoModal(${itemId})">
+                Editează
+              </button>
+              <button class="btn-header-action" style="padding:8px" title="Șterge" onclick="deleteGalleryPhoto(${itemId})">
+                <i data-lucide="trash-2" style="width:14px;height:14px;color:#f87171"></i>
+              </button>` : ''}
           </div>
         </div>
       </div>`;
@@ -599,6 +734,7 @@ function renderGalleryManager() {
 }
 
 function openAddPhotoModal() {
+  if (!requireAdmin()) return;
   editingPhotoId = null;
 
   const titleEl = document.getElementById('photoModalTitle');
@@ -615,11 +751,9 @@ function openAddPhotoModal() {
   if (urlInput) urlInput.value = '';
   if (categorySelect) categorySelect.value = 'fade';
   if (barberSelect) {
-    const defaultBarber = currentSession
-      && currentSession.id !== 'admin'
-      && ALL_BARBERS.includes(currentSession.name)
+    const defaultBarber = currentSession && ALL_BARBERS.includes(currentSession.name)
       ? currentSession.name
-      : 'Fade & Blade';
+      : 'TheStreetBarbershop';
     barberSelect.value = defaultBarber;
   }
   if (preview) preview.src = '';
@@ -630,6 +764,8 @@ function openAddPhotoModal() {
 }
 
 function openEditPhotoModal(id) {
+  if (!requireAdmin()) return;
+
   const numericId = Number(id);
   const item = getStoredGallery().find(photo => Number(photo.id) === numericId);
   if (!item) return;
@@ -655,7 +791,7 @@ function openEditPhotoModal(id) {
 
   if (barberSelect) {
     const hasBarber = Array.from(barberSelect.options).some(option => option.value === item.barber);
-    barberSelect.value = hasBarber ? item.barber : 'Fade & Blade';
+    barberSelect.value = hasBarber ? item.barber : 'TheStreetBarbershop';
   }
 
   if (preview) preview.src = resolveAdminImageUrl(item.imageUrl);
@@ -686,10 +822,12 @@ function previewPhotoUrl() {
 }
 
 function savePhoto() {
+  if (!requireAdmin()) return;
+
   const title = valueOf('photoTitle');
   const url = valueOf('photoUrl');
   const category = valueOf('photoCategory') || 'fade';
-  const barber = valueOf('photoBarber') || 'Fade & Blade';
+  const barber = valueOf('photoBarber') || 'TheStreetBarbershop';
 
   if (!title || !url) {
     alert('Introduceți titlul și URL-ul imaginii.');
@@ -726,6 +864,7 @@ function savePhoto() {
 }
 
 function deleteGalleryPhoto(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Sigur doriți să ștergeți această fotografie din galerie?')) return;
 
   const numericId = Number(id);
@@ -734,6 +873,7 @@ function deleteGalleryPhoto(id) {
 }
 
 function resetDefaultGallery() {
+  if (!requireAdmin()) return;
   if (!confirm('Resetezi galeria la cele 12 fotografii HD implicite?')) return;
   saveStoredGallery(cloneDefaultGallery());
   alert('Galeria a fost resetată la fotografiile inițiale.');
@@ -742,6 +882,7 @@ function resetDefaultGallery() {
 /* ── Time-off & slot blocker ─────────────────────────────────────────────── */
 
 function saveBlockedSlots(list) {
+  if (!isAdminSession()) return false;
   if (!setStoredBlockedSlots(list)) {
     alert('Intervalele blocate nu au putut fi salvate în browser.');
     return false;
@@ -766,15 +907,18 @@ function renderBlockedSlots() {
         <strong style="color:#fff">${escapeHtml(block.barber || '—')}</strong> — <span style="color:var(--gold)">${escapeHtml(block.date)} la ${escapeHtml(block.slot)}</span>
         <div style="font-size:0.75rem;color:#8c857f">Motiv: ${escapeHtml(block.reason || 'Pauză / Indisponibil')}</div>
       </div>
-      <button class="btn-action-icon danger" onclick="unblockSlot(${index})" title="Deblochează Ora">
-        <i data-lucide="unlock" style="width:15px;height:15px"></i>
-      </button>
+      ${isAdminSession() ? `
+        <button class="btn-action-icon danger" onclick="unblockSlot(${index})" title="Deblochează Ora">
+          <i data-lucide="unlock" style="width:15px;height:15px"></i>
+        </button>` : ''}
     </div>`).join('');
 
   if (window.lucide) lucide.createIcons();
 }
 
 function blockNewSlot() {
+  if (!requireAdmin()) return;
+
   const barber = valueOf('blockBarber');
   const date = valueOf('blockDate');
   const slot = valueOf('blockSlot');
@@ -828,6 +972,7 @@ function blockNewSlot() {
 }
 
 function unblockSlot(index) {
+  if (!requireAdmin()) return;
   const blocked = getStoredBlockedSlots();
   if (index < 0 || index >= blocked.length) return;
   blocked.splice(index, 1);
@@ -840,14 +985,85 @@ function renderServicesEditor() {
   const container = document.getElementById('servicesList');
   if (!container) return;
 
-  container.innerHTML = SERVICES.map(service => `
-    <div class="service-row">
-      <div>
-        <strong class="service-row-name">${escapeHtml(service.name)}</strong>
-        <p class="service-row-description">${escapeHtml(service.description)} (${service.duration} min)</p>
-      </div>
-      <span class="service-row-price">$${service.price}</span>
-    </div>`).join('');
+  container.innerHTML = SERVICES.map(service => {
+    const owner = getServiceOwner(service.name) || 'TheStreetBarbershop';
+    const editable = canEditServicePrice(service.name);
+    const price = getServicePrice(service.name);
+
+    return `
+      <div class="service-row ${editable ? 'is-editable' : 'is-locked'}">
+        <div class="service-row-main">
+          <strong class="service-row-name">${escapeHtml(service.name)}</strong>
+          <p class="service-row-description">${escapeHtml(service.description)} (${service.duration} min)</p>
+          <p class="service-row-owner">
+            <i data-lucide="${editable ? 'unlock' : 'lock'}" style="width:12px;height:12px"></i>
+            ${escapeHtml(getBarberAccountLabel(owner))}
+            ${editable ? '<span class="service-owner-badge">Poți edita</span>' : ''}
+          </p>
+        </div>
+        <label class="service-price-field" title="${editable ? 'Modifică prețul serviciului' : 'Prețul poate fi modificat doar de frizerul proprietar sau de Admin'}">
+          <span class="service-price-currency">$</span>
+          <input
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.01"
+            value="${price}"
+            data-service-price-input="${escapeAttr(service.name)}"
+            aria-label="Preț pentru ${escapeAttr(service.name)}"
+            ${editable ? '' : 'disabled'}
+          />
+        </label>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('[data-service-price-input]').forEach(input => {
+    input.addEventListener('change', () => {
+      updateServicePrice(input.getAttribute('data-service-price-input'), input.value);
+    });
+  });
+
+  const note = document.getElementById('servicesRoleNote');
+  if (note) {
+    note.textContent = isAdminSession()
+      ? 'Cont Admin: poți modifica prețurile tuturor serviciilor. Modificările sunt vizibile imediat pe site.'
+      : `Cont ${getAccountLabel()}: poți modifica doar prețurile serviciilor tale. Restul sunt doar pentru vizualizare.`;
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function updateServicePrice(name, value) {
+  if (!currentSession) return;
+
+  if (!canEditServicePrice(name)) {
+    alert('Poți modifica doar prețurile serviciilor care îți aparțin.');
+    renderServicesEditor();
+    return;
+  }
+
+  const service = getService(name);
+  const raw = String(value == null ? '' : value).trim();
+  const amount = Number(raw);
+
+  if (!service || !raw || !Number.isFinite(amount) || amount < 0) {
+    alert('Introdu un preț valid (număr pozitiv).');
+    renderServicesEditor();
+    return;
+  }
+
+  if (!setServicePrice(service.name, amount)) {
+    alert('Prețul nu a putut fi salvat în browser.');
+    return;
+  }
+
+  const status = document.getElementById('servicesSaveStatus');
+  if (status) {
+    status.textContent = `Preț actualizat: ${service.name} — ${formatMoney(getServicePrice(service.name))}.`;
+    status.style.display = 'block';
+  }
+
+  renderServicesEditor();
 }
 
 /* ── CSV export ──────────────────────────────────────────────────────────── */
@@ -890,7 +1106,7 @@ function exportAppointmentsCSV() {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `fade_blade_programari_${getLocalISODate()}.csv`);
+  link.setAttribute('download', `thestreetbarbershop_programari_${getLocalISODate()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -909,6 +1125,9 @@ function initStorageSync() {
       renderGalleryManager();
     } else if (event.key === FB_KEYS.blocked) {
       renderBlockedSlots();
+    } else if (event.key === FB_KEYS.prices) {
+      renderServicesEditor();
+      syncWalkInServiceOptions();
     }
   });
 }
@@ -975,4 +1194,5 @@ window.deleteGalleryPhoto = deleteGalleryPhoto;
 window.resetDefaultGallery = resetDefaultGallery;
 window.blockNewSlot = blockNewSlot;
 window.unblockSlot = unblockSlot;
+window.updateServicePrice = updateServicePrice;
 window.exportAppointmentsCSV = exportAppointmentsCSV;

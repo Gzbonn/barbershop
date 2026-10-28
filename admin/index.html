@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Panou de administrare Fade & Blade — programări, galerie, pauze și servicii." />
+  <meta name="description" content="Panou de administrare TheStreetBarbershop — programări, galerie, pauze și servicii." />
+  <meta name="robots" content="noindex, nofollow" />
   <meta name="theme-color" content="#0c0a09" />
-  <title>Fade & Blade — Admin & Barber Dashboard</title>
+  <title>TheStreetBarbershop — Admin & Barber Dashboard</title>
 
   <link rel="icon" type="image/svg+xml" href="../images/favicon.svg" />
 
@@ -26,9 +27,9 @@
   <div class="login-container" id="loginView">
     <div class="login-card">
       <div class="login-header">
-        <div class="logo">
+        <div class="logo" aria-label="TheStreetBarbershop">
           <i data-lucide="scissors" style="width:24px;height:24px;color:var(--gold)"></i>
-          FADE <span>&</span> BLADE
+          TheStreet<span>Barbershop</span>
         </div>
         <p>Portal Securizat Gestionare Frizerie & Programări</p>
       </div>
@@ -37,34 +38,34 @@
 
       <form id="loginForm">
         <div class="form-group">
-          <label for="username">Utilizator Frizer</label>
-          <input type="text" id="username" class="form-control" placeholder="Introdu user (1, 2, 3 sau admin)" autocomplete="username" required autofocus />
+          <label for="username">Utilizator</label>
+          <input type="text" id="username" class="form-control" placeholder="Barber 1, Barber 2, Barber 3 sau Admin" autocomplete="username" required autofocus />
         </div>
         <div class="form-group">
           <label for="password">Parolă</label>
-          <input type="password" id="password" class="form-control" placeholder="Parola este identică cu userul" autocomplete="current-password" required />
+          <input type="password" id="password" class="form-control" placeholder="Parole demo: 1 / 2 / 3 / admin" autocomplete="current-password" required />
         </div>
         <button type="submit" class="btn-primary" style="margin-top:10px">Autentificare în Panou</button>
       </form>
 
       <div class="quick-logins">
-        <p>Autentificare Rapidă Demo (parola = userul):</p>
+        <p>Autentificare Rapidă Demo (parolă ușoară):</p>
         <div class="quick-login-grid">
-          <button type="button" class="quick-login-btn" onclick="quickLogin('1')">
-            <strong style="color:var(--gold)">User 1</strong><br/>
-            Marcus R.
+          <button type="button" class="quick-login-btn" onclick="quickLogin('barber1')">
+            <strong style="color:var(--gold)">Barber 1</strong><br/>
+            Marcus R. · parola 1
           </button>
-          <button type="button" class="quick-login-btn" onclick="quickLogin('2')">
-            <strong style="color:var(--gold)">User 2</strong><br/>
-            Jake T.
+          <button type="button" class="quick-login-btn" onclick="quickLogin('barber2')">
+            <strong style="color:var(--gold)">Barber 2</strong><br/>
+            Jake T. · parola 2
           </button>
-          <button type="button" class="quick-login-btn" onclick="quickLogin('3')">
-            <strong style="color:var(--gold)">User 3</strong><br/>
-            D'Angelo B.
+          <button type="button" class="quick-login-btn" onclick="quickLogin('barber3')">
+            <strong style="color:var(--gold)">Barber 3</strong><br/>
+            D'Angelo B. · parola 3
           </button>
           <button type="button" class="quick-login-btn" onclick="quickLogin('admin')">
             <strong style="color:var(--gold)">Admin</strong><br/>
-            Manager
+            Control total · parola admin
           </button>
         </div>
         <div style="text-align:center;margin-top:16px">
@@ -82,11 +83,11 @@
     <!-- Header -->
     <header class="admin-header">
       <div class="admin-brand">
-        <a href="../" class="logo">
+        <a href="../" class="logo" aria-label="TheStreetBarbershop">
           <i data-lucide="scissors" style="width:20px;height:20px;color:var(--gold)"></i>
-          FADE <span>&</span> BLADE
+          TheStreet<span>Barbershop</span>
         </a>
-        <span class="admin-badge">Admin Portal</span>
+        <span class="admin-badge" id="adminModeBadge">Admin Portal</span>
       </div>
 
       <div class="admin-user-profile">
@@ -130,6 +131,10 @@
 
     <!-- Main Content Area -->
     <main class="admin-main">
+      <div class="admin-notice" id="barberNotice" style="display:none" role="status">
+        <i data-lucide="eye" style="width:18px;height:18px;flex:0 0 auto"></i>
+        <div id="barberNoticeText"></div>
+      </div>
       
       <!-- ── TAB 1: PROGRAMĂRI ────────────────────────────── -->
       <section class="tab-pane active" id="tabAppointments">
@@ -188,7 +193,7 @@
           </div>
 
           <div style="display:flex;gap:10px">
-            <button class="btn-header-action" onclick="openWalkInModal()">
+            <button class="btn-header-action" id="walkInBtn" onclick="openWalkInModal()">
               <i data-lucide="plus-circle" style="width:16px;height:16px;color:var(--gold)"></i>
               <span>Adaugă Walk-in Manual</span>
             </button>
@@ -229,7 +234,7 @@
             <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff;margin-bottom:4px">Portofoliu Frizerie</h3>
             <p style="font-size:0.82rem;color:#8c857f">Adaugă noi tunsori sau editează fotografiile existente. Orice modificare este vizibilă imediat pe site-ul public.</p>
           </div>
-          <div style="display:flex;gap:10px">
+          <div style="display:flex;gap:10px" id="galleryToolbarActions">
             <button class="btn-primary" style="padding:10px 18px" onclick="openAddPhotoModal()">
               <i data-lucide="plus" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i>
               Adaugă Fotografie Nouă
@@ -249,7 +254,7 @@
       <!-- ── TAB 3: BLOCARE ORE & PAUZE ───────────────────── -->
       <section class="tab-pane" id="tabSchedule">
         <div class="admin-split">
-          <div class="admin-card">
+          <div class="admin-card" id="scheduleBlockCard">
             <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:16px">Blochează un Interval Orar</h4>
             <p style="font-size:0.82rem;color:#8c857f;margin-bottom:20px">Dacă ai o pauză sau ești indisponibil, blochează ora aici. Clienții nu vor putea rezerva acea oră pe site.</p>
             
@@ -301,7 +306,9 @@
       <section class="tab-pane" id="tabServices">
         <div class="admin-card" style="max-width:800px">
           <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:8px">Meniu & Tarife Frizerie</h4>
-          <p style="font-size:0.82rem;color:#8c857f;margin-bottom:24px">Tarifele actuale configurate în sistem pentru fiecare serviciu.</p>
+          <p style="font-size:0.82rem;color:#8c857f;margin-bottom:8px">Prețurile pot fi modificate direct în câmpul fiecărui serviciu. Modificarea este salvată automat și apare imediat pe site.</p>
+          <p class="services-role-note" id="servicesRoleNote"></p>
+          <p class="services-save-status" id="servicesSaveStatus" style="display:none" role="status"></p>
 
           <div id="servicesList" class="services-list">
             <!-- Rendered dynamically via js/admin.js -->
@@ -414,7 +421,7 @@
               <option value="Marcus Rivera">Marcus Rivera</option>
               <option value="Jake Thompson">Jake Thompson</option>
               <option value="D'Angelo Brooks">D'Angelo Brooks</option>
-              <option value="Fade & Blade">Fade & Blade Studio</option>
+              <option value="TheStreetBarbershop">TheStreetBarbershop Studio</option>
             </select>
           </div>
         </div>
