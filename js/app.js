@@ -406,9 +406,6 @@ function initBookingSystem() {
   }
 
   updateApptCount();
-
-  const openApptsBtn = document.getElementById('openMyAppointmentsBtn');
-  if (openApptsBtn) openApptsBtn.addEventListener('click', openMyAppointments);
 }
 
 function openBookingModal(preService, prePrice, preBarber) {
@@ -441,6 +438,14 @@ function openBookingModal(preService, prePrice, preBarber) {
 
   bookingState.confirmed = null;
   bookingState.code = '';
+
+  const emailStatus = document.getElementById('emailConfirmStatus');
+  if (emailStatus) {
+    emailStatus.textContent = '';
+    emailStatus.className = 'email-confirm-status';
+  }
+  const gmailBtn = document.getElementById('gmailConfirmBtn');
+  if (gmailBtn) gmailBtn.removeAttribute('href');
 
   const today = getLocalISODate();
   if (!bookingState.date || bookingState.date < today) {
@@ -814,6 +819,7 @@ function finalizeBooking() {
 
     renderAvailableSlots();
     setModalStep(5);
+    sendBookingConfirmationEmail(record);
   } finally {
     bookingState.finalizing = false;
   }
@@ -849,6 +855,162 @@ function buildGoogleCalendarUrl(record) {
   });
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+/* ── Email confirmation ──────────────────────────────────────────────────── */
+
+function getEmailConfig() {
+  const config = window.EMAIL_CONFIG || {};
+  return {
+    serviceId: String(config.serviceId || '').trim(),
+    templateId: String(config.templateId || '').trim(),
+    publicKey: String(config.publicKey || '').trim(),
+    shopName: config.shopName || 'TheStreetBarbershop',
+    shopAddress: config.shopAddress || '142 Main St, Downtown Arts District',
+    shopPhone: config.shopPhone || '(555) 234-5678',
+    shopEmail: config.shopEmail || 'concierge@thestreetbarbershop.com'
+  };
+}
+
+function isEmailConfigured() {
+  const config = getEmailConfig();
+  return Boolean(config.serviceId && config.templateId && config.publicKey);
+}
+
+function buildBookingEmailText(record) {
+  const config = getEmailConfig();
+
+  return [
+    `Salut, ${record.name}!`,
+    '',
+    `Programarea ta la ${config.shopName} este confirmată.`,
+    '',
+    `COD PROGRAMARE: ${record.code}`,
+    `Serviciu: ${record.service}`,
+    `Frizer: ${record.barber}`,
+    `Data: ${formatPrettyDate(record.date)}`,
+    `Ora: ${record.slot}`,
+    `Durată: ${record.durationMinutes} minute`,
+    `Preț: ${formatMoney(record.price)} (se achită la salon)`,
+    `Note: ${record.notes || '—'}`,
+    '',
+    `Locație: ${config.shopAddress}`,
+    `Telefon: ${config.shopPhone}`,
+    `Email: ${config.shopEmail}`,
+    '',
+    'Te rugăm să ajungi cu 5-10 minute mai devreme. Pentru modificări sau anulări, contactează-ne la telefon.',
+    '',
+    `Pe curând,`,
+    config.shopName
+  ].join('\n');
+}
+
+function buildBookingEmailParams(record) {
+  const config = getEmailConfig();
+  const dateLabel = formatPrettyDate(record.date);
+  const priceLabel = formatMoney(record.price);
+  const durationLabel = `${record.durationMinutes} minute`;
+
+  return {
+    to_email: record.email,
+    to_name: record.name,
+    reply_to: config.shopEmail,
+    subject: `Confirmare programare ${record.code} — ${config.shopName}`,
+    message: buildBookingEmailText(record),
+    booking_code: record.code,
+    booking_service: record.service,
+    booking_barber: record.barber,
+    booking_date: dateLabel,
+    booking_time: record.slot,
+    booking_duration: durationLabel,
+    booking_price: priceLabel,
+    booking_notes: record.notes || '—',
+    client_name: record.name,
+    client_phone: record.phone,
+    client_email: record.email,
+    shop_name: config.shopName,
+    shop_address: config.shopAddress,
+    shop_phone: config.shopPhone,
+    shop_email: config.shopEmail
+  };
+}
+
+function buildGmailComposeUrl(record) {
+  const config = getEmailConfig();
+  const params = new URLSearchParams({
+    view: 'cm',
+    fs: '1',
+    to: record.email,
+    su: `Confirmare programare ${record.code} — ${config.shopName}`,
+    body: buildBookingEmailText(record)
+  });
+  return `https://mail.google.com/mail/?${params.toString().replace(/\+/g, '%20')}`;
+}
+
+let emailSdkPromise = null;
+
+function loadEmailJsSdk() {
+  if (window.emailjs) return Promise.resolve(window.emailjs);
+  if (emailSdkPromise) return emailSdkPromise;
+
+  emailSdkPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.emailjs) resolve(window.emailjs);
+      else reject(new Error('EmailJS SDK indisponibil'));
+    };
+    script.onerror = () => reject(new Error('EmailJS SDK nu a putut fi încărcat'));
+    document.head.appendChild(script);
+  });
+
+  return emailSdkPromise;
+}
+
+async function sendBookingConfirmationEmail(record) {
+  const statusEl = document.getElementById('emailConfirmStatus');
+  const gmailBtn = document.getElementById('gmailConfirmBtn');
+  if (!record) return { sent: false, reason: 'no-record' };
+
+  if (gmailBtn) gmailBtn.href = buildGmailComposeUrl(record);
+
+  if (!isEmailConfigured()) {
+    if (statusEl) {
+      statusEl.textContent = 'Confirmarea automată pe email nu este încă activată. Poți trimite toate detaliile în Gmail cu butonul de mai jos.';
+      statusEl.className = 'email-confirm-status is-warning';
+    }
+    return { sent: false, reason: 'not-configured' };
+  }
+
+  if (statusEl) {
+    statusEl.textContent = `Se trimite confirmarea pe ${record.email}...`;
+    statusEl.className = 'email-confirm-status is-pending';
+  }
+
+  try {
+    const config = getEmailConfig();
+    const emailjs = await loadEmailJsSdk();
+    await emailjs.send(
+      config.serviceId,
+      config.templateId,
+      buildBookingEmailParams(record),
+      { publicKey: config.publicKey }
+    );
+
+    if (statusEl) {
+      statusEl.textContent = `Confirmarea a fost trimisă pe ${record.email}. Verifică și folderul Spam.`;
+      statusEl.className = 'email-confirm-status is-success';
+    }
+    return { sent: true };
+  } catch (error) {
+    console.error('[TheStreetBarbershop] Trimiterea confirmării pe email a eșuat.', error);
+    if (statusEl) {
+      statusEl.textContent = 'Confirmarea automată nu a putut fi trimisă. Folosește butonul „Trimite confirmarea pe Gmail”.';
+      statusEl.className = 'email-confirm-status is-error';
+    }
+    return { sent: false, reason: 'error', error };
+  }
 }
 
 function downloadCalendarFile() {
@@ -1104,3 +1266,8 @@ window.cancelAppointment = cancelAppointment;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 window.renderDynamicGallery = renderDynamicGallery;
+window.sendBookingConfirmationEmail = sendBookingConfirmationEmail;
+window.buildGmailComposeUrl = buildGmailComposeUrl;
+window.buildBookingEmailText = buildBookingEmailText;
+window.buildBookingEmailParams = buildBookingEmailParams;
+window.isEmailConfigured = isEmailConfigured;

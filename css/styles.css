@@ -366,48 +366,8 @@ button {
 }
 
 /* The compact navigation keeps every action visible inside the 1240px
-   container: status is shown in the hero / booking panel, while secondary
-   links become icon-only with accessible labels. */
+   container: the live status is shown in the hero / booking panel. */
 .nav-brand-group .live-status-pill {
-  display: none;
-}
-
-.nav-appointments-btn > span:not(.nav-appointments-badge) {
-  display: none;
-}
-
-.nav-appointments-btn {
-  padding: 8px 10px;
-}
-
-.nav-appointments-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.3s;
-}
-
-.nav-appointments-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(217, 164, 78, 0.06);
-}
-
-.nav-appointments-badge {
-  background: var(--gold);
-  color: #000000;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 99px;
   display: none;
 }
 
@@ -2323,6 +2283,43 @@ button {
   font-weight: 600;
 }
 
+.email-confirm-status {
+  display: none;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin: -8px 0 16px;
+}
+
+.email-confirm-status:not(:empty) {
+  display: block;
+}
+
+.email-confirm-status.is-pending {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.email-confirm-status.is-success {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.email-confirm-status.is-warning {
+  color: var(--gold);
+  background: rgba(217, 164, 78, 0.07);
+  border: 1px solid var(--border-gold);
+}
+
+.email-confirm-status.is-error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
 .modal-footer {
   padding: 18px 28px;
   background: var(--bg-surface-elevated);
@@ -2655,7 +2652,6 @@ body.no-scroll {
 
   .navbar .container { gap: 8px; }
   .logo { font-size: 1rem; letter-spacing: 0.2px; }
-  .nav-appointments-btn { padding: 8px 9px; }
 
   .hero-buttons {
     flex-direction: column;
