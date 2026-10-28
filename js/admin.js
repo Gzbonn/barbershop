@@ -249,7 +249,7 @@ function applyPermissions() {
   if (scheduleSplit) scheduleSplit.style.gridTemplateColumns = admin ? '' : '1fr';
 
   const badge = document.getElementById('adminModeBadge');
-  if (badge) badge.textContent = admin ? 'Admin Portal' : 'Doar Vizualizare';
+  if (badge) badge.textContent = admin ? 'Admin Portal' : 'Cont Frizer';
 
   const notice = document.getElementById('barberNotice');
   const noticeText = document.getElementById('barberNoticeText');
@@ -258,7 +258,7 @@ function applyPermissions() {
       notice.style.display = 'none';
     } else {
       const owned = getOwnedServices().map(service => service.name).join(', ') || 'niciun serviciu';
-      noticeText.textContent = `${getAccountLabel()} — ai acces doar la vizualizare. Poți modifica prețurile serviciilor tale: ${owned}.`;
+      noticeText.textContent = `${getAccountLabel()} — vezi doar programările și serviciile tale. Poți edita serviciile tale: ${owned}.`;
       notice.style.display = 'flex';
     }
   }
@@ -269,7 +269,7 @@ function syncWalkInServiceOptions() {
   if (!select) return;
 
   const previous = select.value ? select.value.split('|')[0] : '';
-  select.innerHTML = SERVICES.map(service => {
+  select.innerHTML = getServiceCatalog().map(service => {
     const price = getServicePrice(service.name);
     return `<option value="${escapeAttr(`${service.name}|${price}`)}">${escapeHtml(service.name)} — ${escapeHtml(formatMoney(price))}</option>`;
   }).join('');
@@ -998,37 +998,61 @@ function renderServicesEditor() {
   const container = document.getElementById('servicesList');
   if (!container) return;
 
-  container.innerHTML = SERVICES.map(service => {
-    const owner = getServiceOwner(service.name) || 'TheStreetBarbershop';
-    const editable = canEditServicePrice(service.name);
-    const price = getServicePrice(service.name);
+  const catalog = getServiceCatalog({ includeInactive: true });
+  const visible = isAdminSession()
+    ? catalog
+    : catalog.filter(service => service.owner === currentSession.name);
 
-    return `
-      <div class="service-row ${editable ? 'is-editable' : 'is-locked'}">
-        <div class="service-row-main">
-          <strong class="service-row-name">${escapeHtml(service.name)}</strong>
-          <p class="service-row-description">${escapeHtml(service.description)} (${service.duration} min)</p>
-          <p class="service-row-owner">
-            <i data-lucide="${editable ? 'unlock' : 'lock'}" style="width:12px;height:12px"></i>
-            ${escapeHtml(getBarberAccountLabel(owner))}
-            ${editable ? '<span class="service-owner-badge">Poți edita</span>' : ''}
-          </p>
-        </div>
-        <label class="service-price-field" title="${editable ? 'Modifică prețul serviciului' : 'Prețul poate fi modificat doar de frizerul proprietar sau de Admin'}">
-          <span class="service-price-currency">$</span>
-          <input
-            type="number"
-            inputmode="decimal"
-            min="0"
-            step="0.01"
-            value="${price}"
-            data-service-price-input="${escapeAttr(service.name)}"
-            aria-label="Preț pentru ${escapeAttr(service.name)}"
-            ${editable ? '' : 'disabled'}
-          />
-        </label>
+  if (visible.length === 0) {
+    container.innerHTML = `
+      <div class="admin-empty-state">
+        Nu ai încă niciun serviciu. Folosește butonul „Adaugă Serviciu” pentru a crea primul serviciu.
       </div>`;
-  }).join('');
+  } else {
+    container.innerHTML = visible.map(service => {
+      const editable = canEditServicePrice(service.name);
+      const price = getServicePrice(service.name);
+      const inactive = service.active === false;
+
+      return `
+        <div class="service-row ${inactive ? 'is-inactive' : ''}">
+          <div class="service-row-main">
+            <strong class="service-row-name">
+              ${escapeHtml(service.name)}
+              ${inactive ? '<span class="service-inactive-badge">Inactiv</span>' : ''}
+            </strong>
+            <p class="service-row-description">${escapeHtml(service.description || 'Fără descriere')} (${service.duration} min)</p>
+            <p class="service-row-owner">
+              <i data-lucide="${editable ? 'unlock' : 'lock'}" style="width:12px;height:12px"></i>
+              ${escapeHtml(getBarberAccountLabel(service.owner))}
+              ${editable ? '<span class="service-owner-badge">Poți edita</span>' : ''}
+            </p>
+          </div>
+          <div class="service-row-actions">
+            <label class="service-price-field" title="${editable ? 'Modifică prețul serviciului' : 'Prețul poate fi modificat doar de frizerul proprietar sau de Admin'}">
+              <span class="service-price-currency">$</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.01"
+                value="${price}"
+                data-service-price-input="${escapeAttr(service.name)}"
+                aria-label="Preț pentru ${escapeAttr(service.name)}"
+                ${editable ? '' : 'disabled'}
+              />
+            </label>
+            ${editable ? `
+              <button class="btn-action-icon" type="button" onclick="openServiceModal('${escapeAttr(service.id)}')" title="Editează serviciul" aria-label="Editează ${escapeAttr(service.name)}">
+                <i data-lucide="pencil"></i>
+              </button>
+              <button class="btn-action-icon danger" type="button" onclick="deleteServiceRow('${escapeAttr(service.id)}')" title="Șterge serviciul" aria-label="Șterge ${escapeAttr(service.name)}">
+                <i data-lucide="trash-2"></i>
+              </button>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
 
   container.querySelectorAll('[data-service-price-input]').forEach(input => {
     input.addEventListener('change', () => {
@@ -1039,11 +1063,145 @@ function renderServicesEditor() {
   const note = document.getElementById('servicesRoleNote');
   if (note) {
     note.textContent = isAdminSession()
-      ? 'Cont Admin: poți modifica prețurile tuturor serviciilor. Modificările sunt vizibile imediat pe site.'
-      : `Cont ${getAccountLabel()}: poți modifica doar prețurile serviciilor tale. Restul sunt doar pentru vizualizare.`;
+      ? 'Cont Admin: vezi și controlezi toate serviciile. Poți adăuga, edita sau șterge orice serviciu.'
+      : `Cont ${getAccountLabel()}: vezi doar serviciile tale. Poți modifica numele, descrierea, prețul, durata sau dezactiva un serviciu.`;
   }
 
   if (window.lucide) lucide.createIcons();
+}
+
+function openServiceModal(id) {
+  if (!currentSession) return;
+
+  const modal = document.getElementById('serviceModal');
+  if (!modal) return;
+
+  const catalog = getServiceCatalog({ includeInactive: true });
+  const service = id ? catalog.find(item => item.id === id) : null;
+
+  if (service && !canEditServicePrice(service.name)) {
+    alert('Poți edita doar serviciile care îți aparțin.');
+    return;
+  }
+
+  setText('serviceModalTitle', service ? 'Editează Serviciul' : 'Adaugă Serviciu Nou');
+
+  const idInput = document.getElementById('serviceId');
+  if (idInput) idInput.value = service ? service.id : '';
+
+  const nameInput = document.getElementById('serviceName');
+  const descriptionInput = document.getElementById('serviceDescription');
+  const priceInput = document.getElementById('servicePrice');
+  const durationInput = document.getElementById('serviceDuration');
+  const activeInput = document.getElementById('serviceActive');
+  const ownerSelect = document.getElementById('serviceOwner');
+  const errorEl = document.getElementById('serviceModalError');
+
+  if (nameInput) nameInput.value = service ? service.name : '';
+  if (descriptionInput) descriptionInput.value = service ? service.description : '';
+  if (priceInput) priceInput.value = service ? service.price : '';
+  if (durationInput) durationInput.value = service ? service.duration : 30;
+  if (activeInput) activeInput.checked = service ? service.active !== false : true;
+  if (errorEl) {
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+  }
+
+  if (ownerSelect) {
+    ownerSelect.innerHTML = [...ALL_BARBERS, 'TheStreetBarbershop'].map(owner => `
+      <option value="${escapeAttr(owner)}">${escapeHtml(getBarberAccountLabel(owner))}</option>`).join('');
+    if (isAdminSession()) {
+      ownerSelect.disabled = false;
+      ownerSelect.value = service ? service.owner : 'TheStreetBarbershop';
+    } else {
+      ownerSelect.value = currentSession.name;
+      ownerSelect.disabled = true;
+    }
+  }
+
+  openAdminModal(modal);
+  if (nameInput) window.setTimeout(() => nameInput.focus(), 60);
+}
+
+function closeServiceModal() {
+  closeAdminModal(document.getElementById('serviceModal'));
+}
+
+function saveServiceModal() {
+  if (!currentSession) return;
+
+  const modal = document.getElementById('serviceModal');
+  const id = String((document.getElementById('serviceId') || {}).value || '').trim();
+  const catalog = getServiceCatalog({ includeInactive: true });
+  const existing = id ? catalog.find(item => item.id === id) : null;
+
+  if (existing && !canEditServicePrice(existing.name)) {
+    alert('Poți edita doar serviciile care îți aparțin.');
+    return;
+  }
+
+  const ownerSelect = document.getElementById('serviceOwner');
+  const owner = isAdminSession()
+    ? (ownerSelect ? ownerSelect.value : 'TheStreetBarbershop')
+    : currentSession.name;
+
+  const result = saveService({
+    id,
+    name: (document.getElementById('serviceName') || {}).value,
+    description: (document.getElementById('serviceDescription') || {}).value,
+    price: (document.getElementById('servicePrice') || {}).value,
+    duration: (document.getElementById('serviceDuration') || {}).value,
+    owner,
+    active: Boolean((document.getElementById('serviceActive') || {}).checked)
+  });
+
+  const errorEl = document.getElementById('serviceModalError');
+  if (!result.ok) {
+    if (errorEl) {
+      errorEl.textContent = result.error;
+      errorEl.style.display = 'block';
+    } else {
+      alert(result.error);
+    }
+    return;
+  }
+
+  closeServiceModal();
+  renderServicesEditor();
+
+  const status = document.getElementById('servicesSaveStatus');
+  if (status) {
+    status.textContent = existing
+      ? `Serviciu actualizat: ${result.service.name}.`
+      : `Serviciu adăugat: ${result.service.name}.`;
+    status.style.display = 'block';
+  }
+}
+
+function deleteServiceRow(id) {
+  if (!currentSession) return;
+
+  const service = getServiceCatalog({ includeInactive: true }).find(item => item.id === id);
+  if (!service) return;
+
+  if (!canEditServicePrice(service.name)) {
+    alert('Poți șterge doar serviciile care îți aparțin.');
+    return;
+  }
+
+  if (!confirm(`Ștergi serviciul „${service.name}”? Programările deja făcute rămân neschimbate.`)) return;
+
+  if (!deleteServiceById(id)) {
+    alert('Serviciul nu a putut fi șters.');
+    return;
+  }
+
+  renderServicesEditor();
+  const status = document.getElementById('servicesSaveStatus');
+  if (status) {
+    status.textContent = `Serviciu șters: ${service.name}.`;
+    status.style.display = 'block';
+  }
 }
 
 function updateServicePrice(name, value) {
@@ -1140,7 +1298,7 @@ function initStorageSync() {
       renderGalleryManager();
     } else if (event.key === FB_KEYS.blocked) {
       renderBlockedSlots();
-    } else if (event.key === FB_KEYS.prices) {
+    } else if (event.key === FB_KEYS.prices || event.key === FB_KEYS.services) {
       renderServicesEditor();
       syncWalkInServiceOptions();
     }
@@ -1179,6 +1337,7 @@ function initAdminModalBehavior() {
       if (event.target !== modal) return;
       if (modal.id === 'walkInModal') closeWalkInModal();
       else if (modal.id === 'photoModal') closePhotoModal();
+      else if (modal.id === 'serviceModal') closeServiceModal();
     });
   });
 
@@ -1186,6 +1345,7 @@ function initAdminModalBehavior() {
     if (event.key !== 'Escape') return;
     closeWalkInModal();
     closePhotoModal();
+    closeServiceModal();
   });
 }
 
@@ -1210,4 +1370,8 @@ window.resetDefaultGallery = resetDefaultGallery;
 window.blockNewSlot = blockNewSlot;
 window.unblockSlot = unblockSlot;
 window.updateServicePrice = updateServicePrice;
+window.openServiceModal = openServiceModal;
+window.closeServiceModal = closeServiceModal;
+window.saveServiceModal = saveServiceModal;
+window.deleteServiceRow = deleteServiceRow;
 window.exportAppointmentsCSV = exportAppointmentsCSV;

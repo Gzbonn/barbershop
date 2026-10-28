@@ -842,6 +842,83 @@ body.no-scroll {
   border-left: 2px solid var(--gold);
   padding: 8px 12px;
   margin-bottom: 16px;
+  flex: 1;
+}
+
+.services-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.services-toolbar .services-role-note {
+  margin-bottom: 0;
+}
+
+.service-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.service-row.is-inactive {
+  opacity: 0.62;
+}
+
+.service-inactive-badge {
+  display: inline-block;
+  margin-left: 6px;
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 0.6rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.service-modal-error {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.form-group textarea.form-control {
+  resize: vertical;
+  min-height: 78px;
+}
+
+.service-active-field {
+  display: flex;
+  align-items: flex-end;
+}
+
+.form-group.service-active-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 12px 0;
+  color: #d6d3d1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.service-active-field input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--gold);
+  cursor: pointer;
 }
 
 .services-save-status {
@@ -930,7 +1007,10 @@ body.no-scroll {
   .admin-modal-footer .btn-header-action,
   .admin-modal-footer .btn-primary { width: 100%; }
   .service-row { align-items: flex-start; flex-wrap: wrap; }
+  .service-row-actions { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
   .service-price-field { margin-left: auto; }
+  .services-toolbar { flex-wrap: wrap; align-items: stretch; }
+  .services-toolbar .btn-primary { width: 100%; }
   .admin-nav { padding: 0 12px; }
 }
 

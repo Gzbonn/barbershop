@@ -261,7 +261,9 @@ function normalizeServiceRecord(record, index) {
     price: Number.isFinite(price) && price >= 0 ? Math.round(price * 100) / 100 : 0,
     duration: Number.isFinite(duration) && duration >= 5 ? duration : 30,
     description: String(data.description || '').trim(),
-    owner: ALL_BARBERS.includes(owner) ? owner : (SERVICE_OWNERS[name] || 'TheStreetBarbershop'),
+    owner: ALL_BARBERS.includes(owner) || owner === 'TheStreetBarbershop'
+      ? owner
+      : (SERVICE_OWNERS[name] || 'TheStreetBarbershop'),
     active: data.active !== false,
     image: String(data.image || '').trim()
       || SERVICE_IMAGES[name]
@@ -276,22 +278,19 @@ function getServiceCatalog(options = {}) {
     ? stored.map((item, index) => normalizeServiceRecord(item, index))
     : buildDefaultServiceCatalog();
 
-  if (!hasStoredCatalog) {
-    safeSetJSON(FB_KEYS.services, catalog);
-  } else {
-    // Migrate prices saved by the previous version (fb_service_prices).
-    const overrides = getServicePriceOverrides();
-    let changed = false;
-    catalog = catalog.map(service => {
-      const override = Number(overrides[service.name]);
-      if (Number.isFinite(override) && override >= 0 && override !== service.price) {
-        changed = true;
-        return { ...service, price: Math.round(override * 100) / 100 };
-      }
-      return service;
-    });
-    if (changed) safeSetJSON(FB_KEYS.services, catalog);
-  }
+  // Migrate prices saved by the previous version (fb_service_prices), both for
+  // an existing catalog and for one just created from defaults.
+  const overrides = getServicePriceOverrides();
+  let changed = !hasStoredCatalog;
+  catalog = catalog.map(service => {
+    const override = Number(overrides[service.name]);
+    if (Number.isFinite(override) && override >= 0 && override !== service.price) {
+      changed = true;
+      return { ...service, price: Math.round(override * 100) / 100 };
+    }
+    return service;
+  });
+  if (changed) safeSetJSON(FB_KEYS.services, catalog);
 
   return options.includeInactive ? catalog : catalog.filter(service => service.active !== false);
 }
@@ -381,7 +380,7 @@ function saveService(serviceData) {
     duration,
     description,
     owner,
-    active: data.active === false ? false : (existing ? existing.active !== false : true),
+    active: data.active !== false,
     image: String(data.image || (existing && existing.image) || '').trim()
       || SERVICE_IMAGES[name]
       || SERVICE_FALLBACK_IMAGES[catalog.length % SERVICE_FALLBACK_IMAGES.length]

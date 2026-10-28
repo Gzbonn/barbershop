@@ -356,6 +356,10 @@ function renderPublicServices() {
   const footerLinks = document.getElementById('footerServiceLinks');
 
   if (services.length === 0) {
+    bookingState.service = '';
+    bookingState.price = 0;
+    bookingState.duration = '';
+    bookingState.durationMinutes = 0;
     if (servicesGrid) {
       servicesGrid.innerHTML = '<p class="services-empty">Momentan nu există servicii disponibile. Contactează frizeria.</p>';
     }
