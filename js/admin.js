@@ -207,7 +207,7 @@ function getAccountLabel(session = currentSession) {
 
 function getOwnedServices(session = currentSession) {
   if (!session) return [];
-  return SERVICES.filter(service => getServiceOwner(service.name) === session.name);
+  return getServicesForOwner(session.name);
 }
 
 function canEditServicePrice(serviceName) {
@@ -237,6 +237,12 @@ function applyPermissions() {
   toggle('walkInBtn', admin);
   toggle('galleryToolbarActions', admin);
   toggle('scheduleBlockCard', admin);
+
+  const barberFilterEl = document.getElementById('barberFilter');
+  if (barberFilterEl) {
+    barberFilterEl.style.display = admin ? '' : 'none';
+    barberFilterEl.disabled = !admin;
+  }
 
   const schedulePane = document.getElementById('tabSchedule');
   const scheduleSplit = schedulePane ? schedulePane.querySelector('.admin-split') : null;
@@ -421,7 +427,8 @@ function renderAppointmentsTable() {
   const tomorrow = shiftISODate(today, 1);
 
   const filtered = getStoredAppointments().filter(item => {
-    if (barberFilter !== 'all' && item.barber !== barberFilter) return false;
+    if (!isAdminSession() && item.barber !== currentSession.name) return false;
+    if (isAdminSession() && barberFilter !== 'all' && item.barber !== barberFilter) return false;
     if (dateFilter === 'today' && item.date !== today) return false;
     if (dateFilter === 'tomorrow' && item.date !== tomorrow) return false;
 
@@ -552,6 +559,10 @@ function showApptNotesById(id) {
   const appointment = getStoredAppointments().find(item => Number(item.id) === numericId);
   if (!appointment) {
     alert('Programarea nu a fost găsită.');
+    return;
+  }
+  if (!isAdminSession() && appointment.barber !== currentSession.name) {
+    alert('Poți vedea doar programările tale.');
     return;
   }
   alert(`Note Client / Preferințe:\n\n${appointment.notes || 'Fără note speciale.'}`);
@@ -895,7 +906,9 @@ function renderBlockedSlots() {
   const container = document.getElementById('blockedSlotsList');
   if (!container) return;
 
-  const blocked = getStoredBlockedSlots();
+  const blocked = getStoredBlockedSlots().filter(block =>
+    isAdminSession() || block.barber === currentSession.name
+  );
   if (blocked.length === 0) {
     container.innerHTML = '<p style="color:#78716c;padding:16px 0">Nu există intervale blocate momentan.</p>';
     return;
@@ -1076,7 +1089,9 @@ function csvCell(value) {
 }
 
 function exportAppointmentsCSV() {
-  const list = getStoredAppointments();
+  const list = isAdminSession()
+    ? getStoredAppointments()
+    : getStoredAppointments().filter(appointment => appointment.barber === currentSession.name);
   if (list.length === 0) {
     alert('Nu există programări de exportat.');
     return;

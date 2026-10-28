@@ -12,7 +12,8 @@ const FB_KEYS = {
   blocked: 'fb_blocked_slots',
   session: 'fb_admin_session',
   client: 'fb_client_id',
-  prices: 'fb_service_prices'
+  prices: 'fb_service_prices',
+  services: 'fb_services'
 };
 
 const FIRST_AVAILABLE = 'First Available Master Barber';
@@ -94,6 +95,22 @@ const SERVICE_OWNERS = {
   'The Royal Treatment': 'D\'Angelo Brooks',
   'Freestyle Hair Art & Color': 'D\'Angelo Brooks'
 };
+
+const SERVICE_IMAGES = {
+  'Classic Haircut': 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80',
+  'Signature Skin Fade': 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80',
+  'Royal Hot Towel Shave': 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=600&q=80',
+  'Beard Sculpting': 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80',
+  'The Royal Treatment': 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80',
+  'Freestyle Hair Art & Color': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80'
+};
+
+const SERVICE_FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80'
+];
 
 // Minutes from midnight. Every day has a schedule; keep in sync with the
 // programme displayed on the website.
@@ -218,13 +235,79 @@ function normalizeServiceName(name) {
   return SERVICE_ALIASES[name] || name;
 }
 
+function buildDefaultServiceCatalog() {
+  return SERVICES.map((service, index) => ({
+    id: `svc-${index + 1}`,
+    name: service.name,
+    price: service.price,
+    duration: service.duration,
+    description: service.description,
+    owner: SERVICE_OWNERS[service.name] || 'TheStreetBarbershop',
+    active: true,
+    image: SERVICE_IMAGES[service.name] || SERVICE_FALLBACK_IMAGES[index % SERVICE_FALLBACK_IMAGES.length]
+  }));
+}
+
+function normalizeServiceRecord(record, index) {
+  const data = record || {};
+  const name = String(data.name || '').trim();
+  const owner = String(data.owner || '').trim();
+  const price = Number(data.price);
+  const duration = parseInt(data.duration, 10);
+
+  return {
+    id: String(data.id || `svc-${index + 1}`),
+    name,
+    price: Number.isFinite(price) && price >= 0 ? Math.round(price * 100) / 100 : 0,
+    duration: Number.isFinite(duration) && duration >= 5 ? duration : 30,
+    description: String(data.description || '').trim(),
+    owner: ALL_BARBERS.includes(owner) ? owner : (SERVICE_OWNERS[name] || 'TheStreetBarbershop'),
+    active: data.active !== false,
+    image: String(data.image || '').trim()
+      || SERVICE_IMAGES[name]
+      || SERVICE_FALLBACK_IMAGES[index % SERVICE_FALLBACK_IMAGES.length]
+  };
+}
+
+function getServiceCatalog(options = {}) {
+  const stored = safeGetJSON(FB_KEYS.services, null);
+  const hasStoredCatalog = Array.isArray(stored);
+  let catalog = hasStoredCatalog
+    ? stored.map((item, index) => normalizeServiceRecord(item, index))
+    : buildDefaultServiceCatalog();
+
+  if (!hasStoredCatalog) {
+    safeSetJSON(FB_KEYS.services, catalog);
+  } else {
+    // Migrate prices saved by the previous version (fb_service_prices).
+    const overrides = getServicePriceOverrides();
+    let changed = false;
+    catalog = catalog.map(service => {
+      const override = Number(overrides[service.name]);
+      if (Number.isFinite(override) && override >= 0 && override !== service.price) {
+        changed = true;
+        return { ...service, price: Math.round(override * 100) / 100 };
+      }
+      return service;
+    });
+    if (changed) safeSetJSON(FB_KEYS.services, catalog);
+  }
+
+  return options.includeInactive ? catalog : catalog.filter(service => service.active !== false);
+}
+
 function getService(name) {
   const normalized = normalizeServiceName(name);
-  return SERVICES.find(service => service.name === normalized) || null;
+  return getServiceCatalog({ includeInactive: true }).find(service => service.name === normalized) || null;
 }
 
 function getServiceOwner(name) {
-  return SERVICE_OWNERS[normalizeServiceName(name)] || null;
+  const service = getService(name);
+  return service ? service.owner : (SERVICE_OWNERS[normalizeServiceName(name)] || null);
+}
+
+function getServicesForOwner(owner) {
+  return getServiceCatalog({ includeInactive: true }).filter(service => service.owner === owner);
 }
 
 function getServicePriceOverrides() {
@@ -239,11 +322,7 @@ function getServiceDuration(name) {
 
 function getServicePrice(name) {
   const service = getService(name);
-  if (!service) return 0;
-
-  const overrides = getServicePriceOverrides();
-  const override = Number(overrides[service.name]);
-  return Number.isFinite(override) && override >= 0 ? override : service.price;
+  return service ? service.price : 0;
 }
 
 function setServicePrice(name, value) {
@@ -251,9 +330,79 @@ function setServicePrice(name, value) {
   const amount = Number(value);
   if (!service || !Number.isFinite(amount) || amount < 0 || amount > 10000) return false;
 
+  const rounded = Math.round(amount * 100) / 100;
+  const catalog = getServiceCatalog({ includeInactive: true }).map(item =>
+    item.id === service.id ? { ...item, price: rounded } : item
+  );
+  if (!safeSetJSON(FB_KEYS.services, catalog)) return false;
+
+  // Keep the legacy price map in sync for older tabs/scripts.
   const overrides = getServicePriceOverrides();
-  overrides[service.name] = Math.round(amount * 100) / 100;
-  return safeSetJSON(FB_KEYS.prices, overrides);
+  overrides[service.name] = rounded;
+  safeSetJSON(FB_KEYS.prices, overrides);
+  return true;
+}
+
+function saveService(serviceData) {
+  const data = serviceData || {};
+  const name = String(data.name || '').trim();
+  const price = Number(data.price);
+  const duration = parseInt(data.duration, 10);
+  const owner = String(data.owner || '').trim();
+  const description = String(data.description || '').trim();
+  const id = String(data.id || '').trim();
+
+  if (name.length < 2 || name.length > 60) {
+    return { ok: false, error: 'Numele serviciului trebuie să aibă între 2 și 60 de caractere.' };
+  }
+  if (!Number.isFinite(price) || price < 0 || price > 10000) {
+    return { ok: false, error: 'Prețul trebuie să fie între $0 și $10,000.' };
+  }
+  if (!Number.isFinite(duration) || duration < 5 || duration > 480) {
+    return { ok: false, error: 'Durata trebuie să fie între 5 și 480 de minute.' };
+  }
+  if (!ALL_BARBERS.includes(owner) && owner !== 'TheStreetBarbershop') {
+    return { ok: false, error: 'Alege un frizer valid pentru acest serviciu.' };
+  }
+
+  const catalog = getServiceCatalog({ includeInactive: true });
+  const duplicate = catalog.find(service =>
+    service.name.toLowerCase() === name.toLowerCase() && service.id !== id
+  );
+  if (duplicate) {
+    return { ok: false, error: 'Există deja un serviciu cu acest nume.' };
+  }
+
+  const existing = id ? catalog.find(service => service.id === id) : null;
+  const record = {
+    id: existing ? existing.id : `svc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+    name,
+    price: Math.round(price * 100) / 100,
+    duration,
+    description,
+    owner,
+    active: data.active === false ? false : (existing ? existing.active !== false : true),
+    image: String(data.image || (existing && existing.image) || '').trim()
+      || SERVICE_IMAGES[name]
+      || SERVICE_FALLBACK_IMAGES[catalog.length % SERVICE_FALLBACK_IMAGES.length]
+  };
+
+  const next = existing
+    ? catalog.map(service => service.id === existing.id ? record : service)
+    : [...catalog, record];
+
+  if (!safeSetJSON(FB_KEYS.services, next)) {
+    return { ok: false, error: 'Serviciul nu a putut fi salvat în browser.' };
+  }
+
+  return { ok: true, service: record };
+}
+
+function deleteServiceById(id) {
+  const catalog = getServiceCatalog({ includeInactive: true });
+  const next = catalog.filter(service => service.id !== id);
+  if (next.length === catalog.length) return false;
+  return safeSetJSON(FB_KEYS.services, next);
 }
 
 /* ── Formatting helpers ──────────────────────────────────────────────────── */

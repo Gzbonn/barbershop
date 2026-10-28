@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDynamicGallery();
   initGalleryFilterTabs();
   initGalleryInteractions();
-  syncServicePrices();
+  renderPublicServices();
+  initServiceInteractions();
   initBookingSystem();
   initStorageSync();
   initModalBehavior();
@@ -346,27 +347,117 @@ function closeLightbox() {
   closeOverlay(document.getElementById('lightboxModal'));
 }
 
-/* ── Service prices (kept in sync with the admin panel) ──────────────────── */
+/* ── Services (rendered from the shared catalog) ─────────────────────────── */
 
-function syncServicePrices() {
-  document.querySelectorAll('[data-service-price]').forEach(element => {
-    const service = getService(element.getAttribute('data-service-price'));
-    if (!service) return;
-    element.innerHTML = `${formatMoney(getServicePrice(service.name))} <small>/ ${service.duration} min</small>`;
-  });
+function renderPublicServices() {
+  const services = getServiceCatalog();
+  const servicesGrid = document.getElementById('servicesGrid');
+  const choices = document.getElementById('bookingServiceChoices');
+  const footerLinks = document.getElementById('footerServiceLinks');
 
-  document.querySelectorAll('[data-service-link]').forEach(link => {
-    const service = getService(link.getAttribute('data-service-link'));
-    if (!service) return;
-    const label = link.getAttribute('data-service-label') || service.name;
-    link.textContent = `${label} (${formatMoney(getServicePrice(service.name))})`;
-  });
+  if (services.length === 0) {
+    if (servicesGrid) {
+      servicesGrid.innerHTML = '<p class="services-empty">Momentan nu există servicii disponibile. Contactează frizeria.</p>';
+    }
+    if (choices) {
+      choices.innerHTML = '<p class="services-empty">Nu există servicii disponibile momentan.</p>';
+    }
+    if (footerLinks) {
+      footerLinks.innerHTML = '<li><span>Momentan indisponibil</span></li>';
+    }
+    return;
+  }
 
-  document.querySelectorAll('.choice-card[data-service]').forEach(card => {
-    const service = getService(card.getAttribute('data-service'));
-    const priceEl = card.querySelector('.price');
-    if (service && priceEl) priceEl.textContent = formatMoney(getServicePrice(service.name));
-  });
+  if (!services.some(service => service.name === bookingState.service)) {
+    bookingState.service = services[0].name;
+    bookingState.price = services[0].price;
+    bookingState.durationMinutes = services[0].duration;
+    bookingState.duration = `${services[0].duration} min`;
+  }
+
+  if (servicesGrid) {
+    servicesGrid.innerHTML = services.map((service, index) => `
+      <div class="service-card reveal" data-service-name="${escapeAttr(service.name)}" role="button" tabindex="0">
+        <div class="service-img-wrap">
+          <img src="${escapeAttr(service.image)}" alt="${escapeAttr(service.name)}" loading="lazy" />
+          <span class="service-number">${String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <div class="service-content">
+          <h3>${escapeHtml(service.name)}</h3>
+          <p>${escapeHtml(service.description || 'Serviciu profesional TheStreetBarbershop.')}</p>
+          <div class="service-meta">
+            <span class="service-price" data-service-price="${escapeAttr(service.name)}">${formatMoney(service.price)} <small>/ ${service.duration} min</small></span>
+            <button class="service-book-action" type="button">Alege Serviciul</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  if (choices) {
+    choices.innerHTML = services.map(service => {
+      const selected = service.name === bookingState.service;
+      return `
+        <div class="choice-card ${selected ? 'selected' : ''}" data-service="${escapeAttr(service.name)}" role="button" tabindex="0" aria-pressed="${selected ? 'true' : 'false'}">
+          <div>
+            <h4>${escapeHtml(service.name)}</h4>
+            <p>${escapeHtml(service.description || 'Serviciu profesional')}</p>
+          </div>
+          <div class="price">${formatMoney(service.price)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  if (footerLinks) {
+    footerLinks.innerHTML = services.slice(0, 5).map(service => `
+      <li><a href="javascript:void(0)" data-service-name="${escapeAttr(service.name)}">${escapeHtml(service.name)} (${formatMoney(service.price)})</a></li>`).join('');
+  }
+
+  observeRevealElements();
+  if (window.lucide) lucide.createIcons();
+}
+
+function initServiceInteractions() {
+  const servicesGrid = document.getElementById('servicesGrid');
+  if (servicesGrid) {
+    servicesGrid.addEventListener('click', event => {
+      const card = event.target.closest('[data-service-name]');
+      if (card) openBookingModal(card.getAttribute('data-service-name'));
+    });
+    servicesGrid.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('[data-service-name]');
+      if (!card) return;
+      event.preventDefault();
+      openBookingModal(card.getAttribute('data-service-name'));
+    });
+  }
+
+  const choices = document.getElementById('bookingServiceChoices');
+  if (choices) {
+    choices.addEventListener('click', event => {
+      const card = event.target.closest('.choice-card[data-service]');
+      if (!card) return;
+      const service = getService(card.getAttribute('data-service'));
+      if (service) selectService(service.name, service.price, `${service.duration} min`, card);
+    });
+    choices.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('.choice-card[data-service]');
+      if (!card) return;
+      event.preventDefault();
+      card.click();
+    });
+  }
+
+  const footerLinks = document.getElementById('footerServiceLinks');
+  if (footerLinks) {
+    footerLinks.addEventListener('click', event => {
+      const link = event.target.closest('[data-service-name]');
+      if (!link) return;
+      event.preventDefault();
+      openBookingModal(link.getAttribute('data-service-name'));
+    });
+  }
 }
 
 /* ── Booking system ──────────────────────────────────────────────────────── */
@@ -1169,11 +1260,12 @@ function initStorageSync() {
       const modal = document.getElementById('myAppointmentsModal');
       if (modal && modal.classList.contains('active')) renderMyAppointmentsList();
     }
-    if (event.key === FB_KEYS.prices) {
-      syncServicePrices();
+    if (event.key === FB_KEYS.prices || event.key === FB_KEYS.services) {
+      renderPublicServices();
       const currentService = getService(bookingState.service);
       if (currentService) bookingState.price = getServicePrice(currentService.name);
       updateModalSummary();
+      renderAvailableSlots();
     }
   });
 }

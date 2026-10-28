@@ -196,103 +196,7 @@
           <button class="btn btn-outline" onclick="openBookingModal()">Vezi Meniul Complet</button>
         </div>
       </div>
-      <div class="services-grid">
-        <!-- Service 1 -->
-        <div class="service-card reveal" onclick="openBookingModal('Classic Haircut', '35')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Classic Haircut" loading="lazy" />
-            <span class="service-number">01</span>
-          </div>
-          <div class="service-content">
-            <h3>Classic Haircut</h3>
-            <p>Tuns personalizat din foarfecă și mașină adaptat profilului cranian. Include spălat, masaj capilar, styling și bărbierit pe ceafă.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="Classic Haircut">$35 <small>/ 45 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service 2 -->
-        <div class="service-card reveal" onclick="openBookingModal('Signature Skin Fade', '40')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Skin Fade" loading="lazy" />
-            <span class="service-number">02</span>
-          </div>
-          <div class="service-content">
-            <h3>Signature Skin Fade</h3>
-            <p>Degradé impecabil la piele cu shaver foil profesional, pierdut fluid în textura din calotă cu linie frontală ascuțită chirurgical.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="Signature Skin Fade">$40 <small>/ 50 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service 3 -->
-        <div class="service-card reveal" onclick="openBookingModal('Royal Hot Towel Shave', '30')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=600&q=80" alt="Hot Towel Shave" loading="lazy" />
-            <span class="service-number">03</span>
-          </div>
-          <div class="service-content">
-            <h3>Royal Hot Towel Shave</h3>
-            <p>Bărbierit tradițional cu brici japonez: uleiuri pre-shave, trei prosoape fierbinți aburinde, spumă caldă densă și balsam astringent.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="Royal Hot Towel Shave">$30 <small>/ 30 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service 4 -->
-        <div class="service-card reveal" onclick="openBookingModal('Beard Sculpting', '25')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Beard Sculpting" loading="lazy" />
-            <span class="service-number">04</span>
-          </div>
-          <div class="service-content">
-            <h3>Beard Sculpting & Trim</h3>
-            <p>Arhitectură completă a bărbii. Conturare pomeți cu briciul, degradé la maxilar, hidratare cu ulei organic de argan și periere cu abur.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="Beard Sculpting">$25 <small>/ 25 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service 5 -->
-        <div class="service-card reveal" onclick="openBookingModal('The Royal Treatment', '85')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80" alt="The Royal Package" loading="lazy" />
-            <span class="service-number">05</span>
-          </div>
-          <div class="service-content">
-            <h3>The Royal Treatment</h3>
-            <p>Pachetul suprem pentru gentleman: Tuns + Skin Fade, Bărbierit Tradițional cu Briciul, Arhitectură Barbă și Tratament Facial cu Argilă.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="The Royal Treatment">$85 <small>/ 90 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Service 6 -->
-        <div class="service-card reveal" onclick="openBookingModal('Freestyle Hair Art & Color', '55')">
-          <div class="service-img-wrap">
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80" alt="Hair Design" loading="lazy" />
-            <span class="service-number">06</span>
-          </div>
-          <div class="service-content">
-            <h3>Freestyle Hair Art & Color</h3>
-            <p>Linii geometrice rase cu briciul, pierduturi artistice, decolorare platinată sau nuanțare barbă pentru camuflarea firelor albe.</p>
-            <div class="service-meta">
-              <span class="service-price" data-service-price="Freestyle Hair Art & Color">$55 <small>/ 60 min</small></span>
-              <button class="service-book-action">Alege Serviciul</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="services-grid" id="servicesGrid"></div>
     </div>
   </section>
 
@@ -687,13 +591,7 @@
         </div>
         <div class="footer-col">
           <h4>Meniu Servicii</h4>
-          <ul>
-            <li><a href="javascript:void(0)" data-service-link="Classic Haircut" data-service-label="Classic Cuts" onclick="openBookingModal('Classic Haircut')">Classic Cuts ($35)</a></li>
-            <li><a href="javascript:void(0)" data-service-link="Signature Skin Fade" data-service-label="Skin Fades" onclick="openBookingModal('Signature Skin Fade')">Skin Fades ($40)</a></li>
-            <li><a href="javascript:void(0)" data-service-link="Beard Sculpting" data-service-label="Beard Sculpting" onclick="openBookingModal('Beard Sculpting')">Beard Sculpting ($25)</a></li>
-            <li><a href="javascript:void(0)" data-service-link="Royal Hot Towel Shave" data-service-label="Royal Hot Shave" onclick="openBookingModal('Royal Hot Towel Shave')">Royal Hot Shave ($30)</a></li>
-            <li><a href="javascript:void(0)" data-service-link="The Royal Treatment" data-service-label="The Royal Treatment" onclick="openBookingModal('The Royal Treatment')">The Royal Treatment ($85)</a></li>
-          </ul>
+          <ul id="footerServiceLinks"></ul>
         </div>
         <div class="footer-col">
           <h4>Contact & Program</h4>
@@ -750,50 +648,7 @@
         <!-- Step 1: Service Selection -->
         <div class="step-pane active" id="stepPane1">
           <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">Selectează serviciul dorit pentru vizita ta:</p>
-          <div class="choice-grid">
-            <div class="choice-card selected" data-service="Classic Haircut" role="button" tabindex="0" aria-pressed="true" onclick="selectService('Classic Haircut', 35, '45 min', this)">
-              <div>
-                <h4>Classic Haircut</h4>
-                <p>Spălat, tuns foarfecă & styling</p>
-              </div>
-              <div class="price">$35</div>
-            </div>
-            <div class="choice-card" data-service="Signature Skin Fade" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Signature Skin Fade', 40, '50 min', this)">
-              <div>
-                <h4>Signature Skin Fade</h4>
-                <p>Pierdut la piele cu shaver foil</p>
-              </div>
-              <div class="price">$40</div>
-            </div>
-            <div class="choice-card" data-service="Royal Hot Towel Shave" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Royal Hot Towel Shave', 30, '30 min', this)">
-              <div>
-                <h4>Royal Hot Towel Shave</h4>
-                <p>Brici clasic & prosoape fierbinți</p>
-              </div>
-              <div class="price">$30</div>
-            </div>
-            <div class="choice-card" data-service="Beard Sculpting" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Beard Sculpting', 25, '25 min', this)">
-              <div>
-                <h4>Beard Sculpting</h4>
-                <p>Arhitectură barbă & uleiuri hidratante</p>
-              </div>
-              <div class="price">$25</div>
-            </div>
-            <div class="choice-card" data-service="The Royal Treatment" role="button" tabindex="0" aria-pressed="false" onclick="selectService('The Royal Treatment', 85, '90 min', this)">
-              <div>
-                <h4>The Royal Treatment</h4>
-                <p>Tuns + Bărbierit + Barbă + Argilă</p>
-              </div>
-              <div class="price">$85</div>
-            </div>
-            <div class="choice-card" data-service="Freestyle Hair Art & Color" role="button" tabindex="0" aria-pressed="false" onclick="selectService('Freestyle Hair Art & Color', 55, '60 min', this)">
-              <div>
-                <h4>Freestyle Hair Art & Color</h4>
-                <p>Desene geometrice & nuanțare</p>
-              </div>
-              <div class="price">$55</div>
-            </div>
-          </div>
+          <div class="choice-grid" id="bookingServiceChoices"></div>
         </div>
 
         <!-- Step 2: Barber Selection -->
