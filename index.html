@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FADE & BLADE — Premium Barbershop & Grooming Lounge</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Modular Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════ NAVBAR ═══════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container">
+      <div class="nav-brand-group">
+        <a href="#" class="logo">
+          <i data-lucide="scissors" style="width:24px;height:24px;color:var(--gold)"></i>
+          FADE <span>&</span> BLADE
+        </a>
+        <div id="navLiveStatus" class="live-status-pill open">
+          <span class="status-dot"></span>
+          <span id="navLiveStatusText">DESCHIS ACUM • Închide la 8:00 PM</span>
+        </div>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="#services">Servicii</a></li>
+        <li><a href="#about">Despre Noi</a></li>
+        <li><a href="#transformation">Transformare</a></li>
+        <li><a href="#gallery">Galerie</a></li>
+        <li><a href="#team">Frizeri</a></li>
+        <li><a href="#testimonials">Recenzii</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="nav-appointments-btn" id="openMyAppointmentsBtn" title="Vezi programările mele salvate">
+          <i data-lucide="calendar-check" style="width:15px;height:15px"></i>
+          <span>Programări</span>
+          <span class="nav-appointments-badge" id="myApptCount">0</span>
+        </button>
+
+        <a href="admin/" class="nav-admin-link" title="Portal Frizeri & Administrare (Useri: 1, 2, 3)">
+          <i data-lucide="shield-check" style="width:15px;height:15px"></i>
+          <span>Admin Portal</span>
+        </a>
+
+        <div class="nav-cta">
+          <button class="btn btn-gold btn-sm" onclick="openBookingModal()">
+            <i data-lucide="calendar" style="width:15px;height:15px"></i>
+            Rezervă Scaun
+          </button>
+        </div>
+
+        <button class="hamburger" id="mobileMenuBtn" aria-label="Deschide Meniul Mobil">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════ MOBILE DRAWER ═══════════════════ -->
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="mobile-nav-drawer" id="mobileNavDrawer">
+    <div class="drawer-header">
+      <span class="logo">FADE <span>&</span> BLADE</span>
+      <button class="drawer-close-btn" id="drawerCloseBtn"><i data-lucide="x"></i></button>
+    </div>
+    <ul class="drawer-links">
+      <li><a href="#services"><i data-lucide="scissors" style="width:16px;height:16px;color:var(--gold)"></i> Servicii</a></li>
+      <li><a href="#about"><i data-lucide="info" style="width:16px;height:16px;color:var(--gold)"></i> Despre Frizerie</a></li>
+      <li><a href="#transformation"><i data-lucide="split" style="width:16px;height:16px;color:var(--gold)"></i> Slider Înainte / După</a></li>
+      <li><a href="#gallery"><i data-lucide="image" style="width:16px;height:16px;color:var(--gold)"></i> Portofoliu Tuns</a></li>
+      <li><a href="#team"><i data-lucide="users" style="width:16px;height:16px;color:var(--gold)"></i> Maeștrii Frizeri</a></li>
+      <li><a href="#testimonials"><i data-lucide="star" style="width:16px;height:16px;color:var(--gold)"></i> Recenzii Clienți</a></li>
+      <li style="margin-top:10px;padding-top:14px;border-top:1px solid var(--border)">
+        <a href="admin/" style="color:var(--gold)">
+          <i data-lucide="lock" style="width:16px;height:16px"></i>
+          Admin / Staff Portal
+        </a>
+      </li>
+    </ul>
+    <div class="drawer-footer">
+      <button class="btn btn-gold" style="width:100%" onclick="closeMobileDrawer(); openBookingModal();">
+        <i data-lucide="calendar" style="width:16px;height:16px"></i>
+        Rezervă Programare
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero">
+    <div class="hero-bg"><div class="hero-stripe"></div></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-eyebrow-row">
+          <div class="hero-eyebrow">Est. 2018 — Downtown Arts District</div>
+          <div id="heroLiveBadge" class="live-status-pill open">
+            <span class="status-dot"></span>
+            <span>Walk-ins & Programări Online</span>
+          </div>
+        </div>
+        <h1>Unde Stilul<br/>Întâlnește <em>Precizia</em></h1>
+        <p class="hero-desc">
+          Măiestria clasică fuzionată cu distincția urbană modernă. Intră neîngrijit, ieși impecabil. Fiecare fade, fiecare contur și bărbierit cu prosop fierbinte este executat fără compromis.
+        </p>
+        <div class="hero-buttons">
+          <button class="btn btn-gold" onclick="openBookingModal()">
+            <i data-lucide="calendar" style="width:18px;height:18px"></i>
+            Rezervă Programare
+          </button>
+          <a href="#services" class="btn btn-outline">Explorează Serviciile</a>
+        </div>
+        <div class="hero-info-bar">
+          <div class="hero-info-item"><h3>14K+</h3><p>Clienți Mulțumiți</p></div>
+          <div class="hero-info-item"><h3>8+</h3><p>Ani de Măiestrie</p></div>
+          <div class="hero-info-item"><h3>4.9★</h3><p>2,400+ Recenzii</p></div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-image-frame">
+          <div class="hero-frame-accent"></div>
+          <div class="hero-frame-accent-2"></div>
+          
+          <div class="hero-image-inner">
+            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80" alt="Master Barber Trimming Hair at Fade and Blade" loading="eager" />
+            <div class="hero-image-gradient"></div>
+          </div>
+
+          <div class="hero-badge-float">
+            <div class="hero-badge-icon">
+              <i data-lucide="award" style="width:20px;height:20px"></i>
+            </div>
+            <div class="hero-badge-text">
+              <h4>#1 Downtown Barbershop</h4>
+              <p>Votat cel mai bun salon de îngrijire masculină</p>
+            </div>
+          </div>
+
+          <div class="hero-chair-tag">
+            <i data-lucide="sparkles" style="width:15px;height:15px;color:var(--gold)"></i>
+            <span>Următorul Scaun Liber: Astăzi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ MARQUEE ═══════════════════ -->
+  <div class="marquee">
+    <div class="marquee-track">
+      <span class="marquee-item">Skin Fades & Tapers</span>
+      <span class="marquee-item">Hot Towel Straight Razor Shaves</span>
+      <span class="marquee-item">Arhitectură Barbă & Contur</span>
+      <span class="marquee-item">Textured French Crop</span>
+      <span class="marquee-item">Classic Pompadour</span>
+      <span class="marquee-item">Custom Hair Tattoo Art</span>
+      <span class="marquee-item">Tratament Scalp & Argilă</span>
+      <span class="marquee-item">Finisare Ulei Organic Argan</span>
+      <span class="marquee-item">Skin Fades & Tapers</span>
+      <span class="marquee-item">Hot Towel Straight Razor Shaves</span>
+      <span class="marquee-item">Arhitectură Barbă & Contur</span>
+      <span class="marquee-item">Textured French Crop</span>
+      <span class="marquee-item">Classic Pompadour</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TRUST BAR ═══════════════════ -->
+  <div class="trust-bar">
+    <div class="container">
+      <div class="trust-item">
+        <i data-lucide="star"></i>
+        <span><strong>4.9 Stele</strong> pe Google (2,400+ recenzii reale)</span>
+      </div>
+      <div class="trust-item">
+        <i data-lucide="award"></i>
+        <span><strong>Best Barbershop</strong> — Metro Magazine 2024</span>
+      </div>
+      <div class="trust-item">
+        <i data-lucide="shield-check"></i>
+        <span><strong>Maeștri Certificați</strong> & Licențiați</span>
+      </div>
+      <div class="trust-item">
+        <i data-lucide="check-circle-2"></i>
+        <span><strong>100% Satisfacție</strong> Garantată</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SERVICES ═══════════════════ -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="services-header">
+        <div>
+          <p class="section-label">Măiestrie Personalizată</p>
+          <h2 class="section-title">Serviciile Noastre de Semnătură</h2>
+          <p class="section-sub">Fiecare sesiune include consultanță de stil, prosop fierbinte aburit cu esență de eucalipt și contur cu briciul pe ceafă.</p>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="openBookingModal()">Vezi Meniul Complet</button>
+        </div>
+      </div>
+      <div class="services-grid">
+        <!-- Service 1 -->
+        <div class="service-card reveal" onclick="openBookingModal('Classic Haircut', '35')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80" alt="Classic Haircut" loading="lazy" />
+            <span class="service-number">01</span>
+          </div>
+          <div class="service-content">
+            <h3>Classic Haircut</h3>
+            <p>Tuns personalizat din foarfecă și mașină adaptat profilului cranian. Include spălat, masaj capilar, styling și bărbierit pe ceafă.</p>
+            <div class="service-meta">
+              <span class="service-price">$35 <small>/ 45 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="service-card reveal" onclick="openBookingModal('Signature Skin Fade', '40')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80" alt="Skin Fade" loading="lazy" />
+            <span class="service-number">02</span>
+          </div>
+          <div class="service-content">
+            <h3>Signature Skin Fade</h3>
+            <p>Degradé impecabil la piele cu shaver foil profesional, pierdut fluid în textura din calotă cu linie frontală ascuțită chirurgical.</p>
+            <div class="service-meta">
+              <span class="service-price">$40 <small>/ 50 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="service-card reveal" onclick="openBookingModal('Royal Hot Towel Shave', '30')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=600&q=80" alt="Hot Towel Shave" loading="lazy" />
+            <span class="service-number">03</span>
+          </div>
+          <div class="service-content">
+            <h3>Royal Hot Towel Shave</h3>
+            <p>Bărbierit tradițional cu brici japonez: uleiuri pre-shave, trei prosoape fierbinți aburinde, spumă caldă densă și balsam astringent.</p>
+            <div class="service-meta">
+              <span class="service-price">$30 <small>/ 30 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="service-card reveal" onclick="openBookingModal('Beard Sculpting', '25')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80" alt="Beard Sculpting" loading="lazy" />
+            <span class="service-number">04</span>
+          </div>
+          <div class="service-content">
+            <h3>Beard Sculpting & Trim</h3>
+            <p>Arhitectură completă a bărbii. Conturare pomeți cu briciul, degradé la maxilar, hidratare cu ulei organic de argan și periere cu abur.</p>
+            <div class="service-meta">
+              <span class="service-price">$25 <small>/ 25 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="service-card reveal" onclick="openBookingModal('The Royal Treatment', '85')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80" alt="The Royal Package" loading="lazy" />
+            <span class="service-number">05</span>
+          </div>
+          <div class="service-content">
+            <h3>The Royal Treatment</h3>
+            <p>Pachetul suprem pentru gentleman: Tuns + Skin Fade, Bărbierit Tradițional cu Briciul, Arhitectură Barbă și Tratament Facial cu Argilă.</p>
+            <div class="service-meta">
+              <span class="service-price">$85 <small>/ 90 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="service-card reveal" onclick="openBookingModal('Freestyle Hair Art & Color', '55')">
+          <div class="service-img-wrap">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80" alt="Hair Design" loading="lazy" />
+            <span class="service-number">06</span>
+          </div>
+          <div class="service-content">
+            <h3>Freestyle Hair Art & Color</h3>
+            <p>Linii geometrice rase cu briciul, pierduturi artistice, decolorare platinată sau nuanțare barbă pentru camuflarea firelor albe.</p>
+            <div class="service-meta">
+              <span class="service-price">$55 <small>/ 60 min</small></span>
+              <button class="service-book-action">Alege Serviciul</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ABOUT ═══════════════════ -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-image-wrap reveal">
+        <div class="about-image">
+          <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1000&q=80" alt="Fade & Blade Barbershop Luxury Interior" loading="lazy" />
+        </div>
+        <div class="about-experience-card">
+          <h3>8+</h3>
+          <p>Ani de Excelență</p>
+        </div>
+      </div>
+
+      <div class="about-text">
+        <p class="section-label">Filosofia Noastră</p>
+        <h2 class="section-title">Mai Mult Decât un Tuns —<br/><em>Un Ritual de Încredere</em></h2>
+        <p class="section-sub">
+          Fondată în 2018 în inima centrului istoric, Fade & Blade s-a născut ca antidot pentru saloanele grăbite de duzină. Am reînviat arta pierdută a bărbieritului autentic — combinând meșteșugul clasic cu vibrațiile contemporane urbane.
+        </p>
+        <div class="about-features">
+          <div class="about-feature">
+            <div class="about-feature-icon"><i data-lucide="trophy"></i></div>
+            <div>
+              <strong>Maeștri Frizeri cu Peste 10 Ani de Experiență</strong>
+              <p style="font-size:0.82rem;color:var(--text-dim)">Fiecare membru al echipei deține certificări de nivel internațional în tehnici de fading și foarfecă.</p>
+            </div>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon"><i data-lucide="sparkles"></i></div>
+            <div>
+              <strong>Formule de Îngrijire & Apotecă Premium</strong>
+              <p style="font-size:0.82rem;color:var(--text-dim)">Folosim exclusiv produse de la Baxter of California, Reuzel și pomade australiene cu ulei de ceai.</p>
+            </div>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon"><i data-lucide="coffee"></i></div>
+            <div>
+              <strong>Bar de Protocol & Muzică pe Vinil</strong>
+              <p style="font-size:0.82rem;color:var(--text-dim)">Savurează un whiskey single malt gratuit, o cafea espresso proaspăt râșnită în timp ce asculți viniluri jazz & lofi.</p>
+            </div>
+          </div>
+          <div class="about-feature">
+            <div class="about-feature-icon"><i data-lucide="shield-check"></i></div>
+            <div>
+              <strong>Sterilizare Barbicide de Calibru Medical</strong>
+              <p style="font-size:0.82rem;color:var(--text-dim)">Lame de brici de unică folosință Feather Japan și sterilizatoare UV pentru toate foarfecele și grătarele.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ BEFORE & AFTER TRANSFORMATION SLIDER ═══════════════════ -->
+  <section class="transformation-section" id="transformation">
+    <div class="container">
+      <div class="transformation-header">
+        <p class="section-label">Diferența Vizibilă</p>
+        <h2 class="section-title">Slider Interactiv: Înainte & După</h2>
+        <p class="section-sub">Trage de separator pentru a vedea cum geometria precisă și conturarea bărbii transformă complet fizionomia.</p>
+      </div>
+
+      <div class="comparison-container reveal">
+        <div class="comparison-slider" id="comparisonSlider">
+          <!-- After Image (Base) -->
+          <div class="comparison-image after">
+            <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80" alt="După: Tuns Fade și Barbă Conturată" />
+            <div class="comparison-badge after-badge">DUPĂ — FADE & BLADE</div>
+          </div>
+
+          <!-- Before Image (Overlay clipped) -->
+          <div class="comparison-image before" id="comparisonBefore">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80" alt="Înainte de Tuns" />
+            <div class="comparison-badge before-badge">ÎNAINTE</div>
+          </div>
+
+          <!-- Draggable Handle -->
+          <div class="comparison-handle" id="comparisonHandle">
+            <div class="comparison-handle-btn">
+              <i data-lucide="move-horizontal"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="comparison-tip">
+          <i data-lucide="mouse-pointer-click"></i>
+          <span>Click sau glisează stânga / dreapta pe imagine pentru a compara rezultatul</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ GALLERY ═══════════════════ -->
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <div class="gallery-header">
+        <p class="section-label">Portofoliu în Înaltă Rezoluție</p>
+        <h2 class="section-title">Galeria de Tunsori</h2>
+        <p class="section-sub">Fiecare tunsoare reprezintă cartea noastră de vizită. Dă click pe orice imagine pentru a o mări sau pentru a rezerva stilul exact.</p>
+        
+        <!-- Filter Tabs -->
+        <div class="gallery-filters">
+          <button class="filter-btn active" data-filter="all">Toate Stilurile</button>
+          <button class="filter-btn" data-filter="fade">Skin Fades</button>
+          <button class="filter-btn" data-filter="beard">Arhitectură Barbă</button>
+          <button class="filter-btn" data-filter="classic">Tunsori Clasice</button>
+          <button class="filter-btn" data-filter="modern">Art & Color</button>
+          <button class="filter-btn" data-filter="shop">Atmosferă Salon</button>
+        </div>
+      </div>
+
+      <!-- Populated dynamically from localStorage so changes in Admin Panel are immediately live -->
+      <div class="gallery-grid" id="galleryGrid">
+        <!-- Rendered dynamically via js/app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ LIGHTBOX MODAL ═══════════════════ -->
+  <div class="lightbox-modal" id="lightboxModal">
+    <button class="lightbox-close" onclick="closeLightbox()"><i data-lucide="x"></i></button>
+    <div class="lightbox-content">
+      <div class="lightbox-img-wrap">
+        <img id="lightboxImg" src="" alt="Zoomed Barbershop Look" />
+      </div>
+      <div class="lightbox-details">
+        <div>
+          <h3 id="lightboxTitle" style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:4px"></h3>
+          <p id="lightboxSubtitle" style="font-size:0.8rem;color:var(--gold)"></p>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="closeLightbox(); openBookingModal();">
+          <i data-lucide="scissors" style="width:14px;height:14px"></i>
+          Vreau Acest Tuns
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TEAM ("The Crew") ═══════════════════ -->
+  <section class="team" id="team">
+    <div class="container">
+      <div class="team-header">
+        <p class="section-label">Maeștrii Frizeriei</p>
+        <h2 class="section-title">Echipa Noastră</h2>
+        <p class="section-sub">Alege-ți frizerul preferat sau selectează primul scaun disponibil pentru prioritate maximă.</p>
+      </div>
+      <div class="team-grid">
+        <!-- Barber 1 -->
+        <div class="team-card reveal">
+          <div class="team-photo-wrap">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80" alt="Marcus Rivera - Master Barber" loading="lazy" />
+            <div class="team-photo-gradient"></div>
+            <span class="team-specialty-badge">Fade Specialist</span>
+          </div>
+          <div class="team-info">
+            <h3>Marcus Rivera</h3>
+            <div class="team-role">Fondator & Master Barber</div>
+            <p>15 ani de experiență. Fost demonstrator la NYC Barber Expo. Recunoscut pentru zero skin fade-uri chirurgicale și geometrie facială impecabilă.</p>
+            <button class="btn btn-outline team-book-btn" onclick="openBookingModal(null, null, 'Marcus Rivera')">
+              <i data-lucide="calendar" style="width:14px;height:14px"></i>
+              Programează-te la Marcus
+            </button>
+          </div>
+        </div>
+
+        <!-- Barber 2 -->
+        <div class="team-card reveal">
+          <div class="team-photo-wrap">
+            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80" alt="Jake Thompson - Senior Barber" loading="lazy" />
+            <div class="team-photo-gradient"></div>
+            <span class="team-specialty-badge">Arhitect Barbă</span>
+          </div>
+          <div class="team-info">
+            <h3>Jake Thompson</h3>
+            <div class="team-role">Senior Barber & Expert Brici Tradițional</div>
+            <p>Virtuozul bărbilor din centru. Știe exact cum să gradeze și să contureze barba pentru a evidenția maxilarul și trăsăturile feței.</p>
+            <button class="btn btn-outline team-book-btn" onclick="openBookingModal(null, null, 'Jake Thompson')">
+              <i data-lucide="calendar" style="width:14px;height:14px"></i>
+              Programează-te la Jake
+            </button>
+          </div>
+        </div>
+
+        <!-- Barber 3 -->
+        <div class="team-card reveal">
+          <div class="team-photo-wrap">
+            <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=600&q=80" alt="D'Angelo Brooks - Style Specialist" loading="lazy" />
+            <div class="team-photo-gradient"></div>
+            <span class="team-specialty-badge">Creativitate & Textură</span>
+          </div>
+          <div class="team-info">
+            <h3>D'Angelo Brooks</h3>
+            <div class="team-role">Specialist Stilistică & Textură Scissor</div>
+            <p>Aduce cele mai proaspete tendințe de pe covorul roșu: crops franțuzești texturate, decolorări de efect și modele rase personalizate.</p>
+            <button class="btn btn-outline team-book-btn" onclick="openBookingModal(null, null, 'D\'Angelo Brooks')">
+              <i data-lucide="calendar" style="width:14px;height:14px"></i>
+              Programează-te la D'Angelo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ TESTIMONIALS ═══════════════════ -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="testimonials-header">
+        <p class="section-label">Poveștile Clienților Noștri</p>
+        <h2 class="section-title">Ce Spun Domnii</h2>
+        <p class="section-sub">Peste 2,400 de recenzii de 5 stele verificate pe Google. Iată de ce clienții noștri fideli refuză să meargă în altă parte.</p>
+      </div>
+      <div class="testimonials-grid">
+        <!-- Review 1 -->
+        <div class="testimonial-card reveal">
+          <div class="testimonial-stars">
+            <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i>
+          </div>
+          <blockquote>"Cea mai bună frizerie în care am călcat vreodată. Marcus mi-a făcut cel mai curat fade din ultimii 10 ani. Berea artizanală rece și prosopul cald la final fac din asta o adevărată relaxare."</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">
+              <img src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=120&q=80" alt="Chris M." />
+            </div>
+            <div>
+              <div class="testimonial-name">
+                <span>Cristian Mihăilescu</span>
+                <span class="verified-badge"><i data-lucide="check-circle" style="width:14px;height:14px"></i></span>
+              </div>
+              <div class="testimonial-tag">Client Fidel din 2020 • Recenzie Google Verificată</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="testimonial-card reveal">
+          <div class="testimonial-stars">
+            <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i>
+          </div>
+          <blockquote>"Am intrat complet neîngrijit înainte de cununia mea civilă. Jake și-a acordat tot timpul necesar cu briciul și mi-a sculptat barba impecabil. Soția a rămas impresionată."</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">
+              <img src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=120&q=80" alt="Tyler R." />
+            </div>
+            <div>
+              <div class="testimonial-name">
+                <span>Tudor Radu</span>
+                <span class="verified-badge"><i data-lucide="check-circle" style="width:14px;height:14px"></i></span>
+              </div>
+              <div class="testimonial-tag">Client Fidel din 2022 • Recenzie Google Verificată</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 3 -->
+        <div class="testimonial-card reveal">
+          <div class="testimonial-stars">
+            <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i>
+          </div>
+          <blockquote>"În sfârșit un loc unde frizerii ascultă cu atenție ce vrei și nu te grăbesc. D'Angelo mi-a realizat exact tunsul texturat dorit din poze. Sistemul de programare online este super comod."</blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="Adrian K." />
+            </div>
+            <div>
+              <div class="testimonial-name">
+                <span>Adrian Cosmin</span>
+                <span class="verified-badge"><i data-lucide="check-circle" style="width:14px;height:14px"></i></span>
+              </div>
+              <div class="testimonial-tag">Client Fidel din 2023 • Recenzie Google Verificată</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ BOOKING CTA ═══════════════════ -->
+  <section class="booking" id="booking">
+    <div class="container">
+      <div class="booking-box reveal">
+        <div class="booking-content">
+          <p class="section-label">Rezervă Scaunul Tău</p>
+          <h2>Așază-te Pe Scaun.<br/>Pleacă Impecabil.</h2>
+          <p>Primim și clienți fără programare în limita locurilor libere, dar programările online beneficiază întotdeauna de prioritate absolută.</p>
+          <button class="btn btn-gold" onclick="openBookingModal()">
+            <i data-lucide="calendar" style="width:18px;height:18px"></i>
+            Rezervă Acum în 60 de Secunde
+          </button>
+        </div>
+
+        <div class="booking-hours">
+          <div class="hours-title">
+            <span><i data-lucide="clock" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px"></i> Program Salon</span>
+            <span class="live-status-pill open" id="boxStatusPill">
+              <span class="status-dot"></span>
+              <span id="boxStatusText">Deschis Astăzi</span>
+            </span>
+          </div>
+          <div class="hours-row">
+            <span class="hours-day">Luni – Vineri</span>
+            <span class="hours-time">9:00 AM – 8:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span class="hours-day">Sâmbătă</span>
+            <span class="hours-time">8:00 AM – 6:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span class="hours-day">Duminică</span>
+            <span class="hours-time">10:00 AM – 4:00 PM</span>
+          </div>
+          <div class="hours-row no-border" style="margin-top: 10px;">
+            <span class="hours-day icon-inline"><i data-lucide="map-pin"></i> Locație</span>
+            <span class="hours-time">142 Main St, Downtown Arts District</span>
+          </div>
+          <div class="hours-row no-border">
+            <span class="hours-day icon-inline"><i data-lucide="phone"></i> Concierge</span>
+            <span class="hours-time"><a href="tel:5552345678" style="color:var(--gold)">(555) 234-5678</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ LOOKBOOK / SOCIAL ═══════════════════ -->
+  <section class="social">
+    <div class="container">
+      <div class="social-header">
+        <p class="section-label">Comunitatea Noastră</p>
+        <h2 class="section-title">@fadeandblade</h2>
+        <p class="section-sub" style="margin: 0 auto">Dă tag paginii noastre în story-urile tale pentru a fi prezentat pe peretele săptămânal al salonului.</p>
+      </div>
+      <div class="social-grid">
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80', 'Skin Fade Showcase', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=80', 'Beard Finish Look', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80', 'Downtown Lounge Corner', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80', 'Textured Crop Styling', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=1200&q=80', 'Straight Razor Detail', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1512690459411-b9245aed614b?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+        <div class="social-item" onclick="openLightbox('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80', 'In The Zone Cutting', '@fadeandblade')">
+          <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=500&q=80" alt="Instagram Cut" loading="lazy" />
+          <div class="social-overlay"><i data-lucide="instagram"></i><span>VEZI STILUL</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <i data-lucide="scissors" style="width:20px;height:20px;color:var(--gold)"></i>
+            FADE <span>&</span> BLADE
+          </a>
+          <p>Frizerie de elită în Downtown Arts District. Dedicați măiestriei tradiționale, tunsorilor fade precise și unei atmosfere autentice.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigare Rapidă</h4>
+          <ul>
+            <li><a href="#services">Servicii</a></li>
+            <li><a href="#about">Povestea Noastră</a></li>
+            <li><a href="#transformation">Înainte & După</a></li>
+            <li><a href="#gallery">Portofoliu Tunsori</a></li>
+            <li><a href="#team">Frizerii Noștri</a></li>
+            <li><a href="admin/" style="color:var(--gold)">Admin Portal Frizeri</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Meniu Servicii</h4>
+          <ul>
+            <li><a href="javascript:void(0)" onclick="openBookingModal('Classic Haircut', '35')">Classic Cuts ($35)</a></li>
+            <li><a href="javascript:void(0)" onclick="openBookingModal('Signature Skin Fade', '40')">Skin Fades ($40)</a></li>
+            <li><a href="javascript:void(0)" onclick="openBookingModal('Beard Sculpting', '25')">Beard Sculpting ($25)</a></li>
+            <li><a href="javascript:void(0)" onclick="openBookingModal('Royal Hot Towel Shave', '30')">Royal Hot Shave ($30)</a></li>
+            <li><a href="javascript:void(0)" onclick="openBookingModal('The Royal Treatment', '85')">The Royal Treatment ($85)</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact & Program</h4>
+          <ul>
+            <li><a href="#">142 Main St, Downtown</a></li>
+            <li><a href="tel:5552345678">(555) 234-5678</a></li>
+            <li><a href="mailto:concierge@fadeandblade.com">concierge@fadeandblade.com</a></li>
+            <li><span style="color:var(--gold);font-size:0.8rem">🟢 Luni-Vineri: 9am-8pm</span></li>
+            <li><span style="color:var(--gold);font-size:0.8rem">Sâm: 8am-6pm | Dum: 10am-4pm</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 Fade & Blade Grooming Lounge. Toate drepturile rezervate.</span>
+        <div class="footer-socials">
+          <a href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+          <a href="#" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+          <a href="#" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+          <a href="#" aria-label="YouTube"><i data-lucide="youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════ AMBIENT AUDIO WIDGET ═══════════════════ -->
+  <button class="soundscape-toggle" id="soundscapeBtn">
+    <i data-lucide="radio" style="width:16px;height:16px"></i>
+    <span id="soundscapeLabel">Shop Vibe: Lofi & Vinil</span>
+    <div class="soundscape-eq">
+      <div class="soundscape-bar"></div>
+      <div class="soundscape-bar"></div>
+      <div class="soundscape-bar"></div>
+    </div>
+  </button>
+
+  <!-- ═══════════════════ MOBILE STICKY CTA ═══════════════════ -->
+  <div class="mobile-cta">
+    <button class="btn btn-gold" onclick="openBookingModal()">
+      <i data-lucide="calendar" style="width:18px;height:18px"></i>
+      Rezervă Programare
+    </button>
+  </div>
+
+  <!-- ═══════════════════ INTERACTIVE BOOKING MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="bookingModal">
+    <div class="booking-modal-box">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i data-lucide="scissors" style="width:20px;height:20px;color:var(--gold)"></i>
+          <h3>Rezervă Scaunul Tău</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeBookingModal()"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Stepper Indicator -->
+      <div class="modal-stepper">
+        <div class="step-item active" id="stepIndicator1">1. Serviciu</div>
+        <div class="step-item" id="stepIndicator2">2. Frizer</div>
+        <div class="step-item" id="stepIndicator3">3. Data & Ora</div>
+        <div class="step-item" id="stepIndicator4">4. Date Contact</div>
+        <div class="step-item" id="stepIndicator5">5. Confirmat</div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Step 1: Service Selection -->
+        <div class="step-pane active" id="stepPane1">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">Selectează serviciul dorit pentru vizita ta:</p>
+          <div class="choice-grid">
+            <div class="choice-card selected" onclick="selectService('Classic Haircut', 35, '45 min', this)">
+              <div>
+                <h4>Classic Haircut</h4>
+                <p>Spălat, tuns foarfecă & styling</p>
+              </div>
+              <div class="price">$35</div>
+            </div>
+            <div class="choice-card" onclick="selectService('Signature Skin Fade', 40, '50 min', this)">
+              <div>
+                <h4>Signature Skin Fade</h4>
+                <p>Pierdut la piele cu shaver foil</p>
+              </div>
+              <div class="price">$40</div>
+            </div>
+            <div class="choice-card" onclick="selectService('Royal Hot Towel Shave', 30, '30 min', this)">
+              <div>
+                <h4>Royal Hot Towel Shave</h4>
+                <p>Brici clasic & prosoape fierbinți</p>
+              </div>
+              <div class="price">$30</div>
+            </div>
+            <div class="choice-card" onclick="selectService('Beard Sculpting', 25, '25 min', this)">
+              <div>
+                <h4>Beard Sculpting</h4>
+                <p>Arhitectură barbă & uleiuri hidratante</p>
+              </div>
+              <div class="price">$25</div>
+            </div>
+            <div class="choice-card" onclick="selectService('The Royal Treatment', 85, '90 min', this)">
+              <div>
+                <h4>The Royal Treatment</h4>
+                <p>Tuns + Bărbierit + Barbă + Argilă</p>
+              </div>
+              <div class="price">$85</div>
+            </div>
+            <div class="choice-card" onclick="selectService('Freestyle Hair Art & Color', 55, '60 min', this)">
+              <div>
+                <h4>Freestyle Hair Art & Color</h4>
+                <p>Desene geometrice & nuanțare</p>
+              </div>
+              <div class="price">$55</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Barber Selection -->
+        <div class="step-pane" id="stepPane2">
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">Selectează frizerul preferat sau primul scaun disponibil:</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="barber-modal-card selected" onclick="selectBarber('First Available Master Barber', 'Any Chair', this)">
+              <div class="barber-modal-avatar" style="display:flex;align-items:center;justify-content:center;background:#24201b">
+                <i data-lucide="zap" style="color:var(--gold);width:22px;height:22px"></i>
+              </div>
+              <div class="barber-modal-info">
+                <h4>Primul Scaun Disponibil (Cel mai rapid)</h4>
+                <p>Alocat automat primului frizer liber pentru prioritate imediată</p>
+              </div>
+            </div>
+
+            <div class="barber-modal-card" onclick="selectBarber('Marcus Rivera', 'Head Barber / Fade Specialist', this)">
+              <div class="barber-modal-avatar">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80" alt="Marcus" />
+              </div>
+              <div class="barber-modal-info">
+                <h4>Marcus Rivera</h4>
+                <p>Head Barber • Specialist Skin Fade & Geometrie</p>
+              </div>
+            </div>
+
+            <div class="barber-modal-card" onclick="selectBarber('Jake Thompson', 'Senior Barber / Beard Sculptor', this)">
+              <div class="barber-modal-avatar">
+                <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80" alt="Jake" />
+              </div>
+              <div class="barber-modal-info">
+                <h4>Jake Thompson</h4>
+                <p>Senior Barber • Arhitectură Barbă & Brici Tradițional</p>
+              </div>
+            </div>
+
+            <div class="barber-modal-card" onclick="selectBarber('D\'Angelo Brooks', 'Style & Creative Specialist', this)">
+              <div class="barber-modal-avatar">
+                <img src="https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=120&q=80" alt="D'Angelo" />
+              </div>
+              <div class="barber-modal-info">
+                <h4>D'Angelo Brooks</h4>
+                <p>Style Specialist • Scissor Texture & Freestyle Art</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Date & Time (Real-Time Availability Check) -->
+        <div class="step-pane" id="stepPane3">
+          <div class="form-group">
+            <label for="bookingDate">Alege Data Programării</label>
+            <input type="date" id="bookingDate" class="form-input" />
+          </div>
+          
+          <div class="form-group">
+            <label>Ore Disponibile (Orele deja rezervate apar marcate cu <span style="color:#ef4444">Ocupat</span>):</label>
+            <div class="slots-grid" id="slotsGrid">
+              <!-- Rendered dynamically and validated in real time via js/app.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Contact Details -->
+        <div class="step-pane" id="stepPane4">
+          <div class="form-group">
+            <label for="clientName">Nume și Prenume</label>
+            <input type="text" id="clientName" class="form-input" placeholder="ex: Alexandru Moraru" required />
+          </div>
+          <div class="choice-grid" style="margin-bottom:16px">
+            <div class="form-group" style="margin-bottom:0">
+              <label for="clientPhone">Număr Telefon (Confirmare SMS)</label>
+              <input type="tel" id="clientPhone" class="form-input" placeholder="(555) 000-0000" required />
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label for="clientEmail">Email</label>
+              <input type="email" id="clientEmail" class="form-input" placeholder="alex@example.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="clientNotes">Note / Preferințe de Stil (Opțional)</label>
+            <input type="text" id="clientNotes" class="form-input" placeholder="ex: Păstrează lungimea sus, pierdut mediu la piele" />
+          </div>
+        </div>
+
+        <!-- Step 5: Confirmation Ticket -->
+        <div class="step-pane" id="stepPane5">
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="width:56px;height:56px;border-radius:50%;background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+              <i data-lucide="check" style="width:28px;height:28px"></i>
+            </div>
+            <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff;margin-bottom:4px">Scaunul Tău Este Rezervat!</h3>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Biletul de confirmare a fost salvat. Ora a fost marcată ca ocupată în sistem.</p>
+          </div>
+
+          <div class="confirmation-ticket">
+            <div class="ticket-header">
+              <div>
+                <span style="font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Cod Programare</span>
+                <div class="ticket-code" id="ticketCode">FB-9842</div>
+              </div>
+              <div style="text-align:right">
+                <span style="font-size:0.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Locație</span>
+                <div style="font-size:0.85rem;color:#fff;font-weight:600">Fade & Blade Main St</div>
+              </div>
+            </div>
+            <div class="ticket-row"><span class="label">Client:</span><span class="val" id="ticketClient">Alexandru Moraru</span></div>
+            <div class="ticket-row"><span class="label">Serviciu:</span><span class="val" id="ticketService">Signature Skin Fade</span></div>
+            <div class="ticket-row"><span class="label">Frizer:</span><span class="val" id="ticketBarber">Marcus Rivera</span></div>
+            <div class="ticket-row"><span class="label">Data & Ora:</span><span class="val" id="ticketDateTime">Mâine la 10:00 AM</span></div>
+            <div class="ticket-row"><span class="label">Total Achitat la Salon:</span><span class="val" id="ticketPrice" style="color:var(--gold);font-size:1.1rem">$40.00</span></div>
+          </div>
+
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-gold btn-sm" id="downloadIcsBtn" onclick="downloadCalendarFile()" style="flex:1">
+              <i data-lucide="download" style="width:14px;height:14px"></i>
+              Salvează în Apple / Outlook (.ics)
+            </button>
+            <a class="btn btn-outline btn-sm" id="googleCalBtn" target="_blank" style="flex:1">
+              <i data-lucide="calendar-plus" style="width:14px;height:14px"></i>
+              Adaugă în Google Calendar
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Controls -->
+      <div class="modal-footer" id="modalFooter">
+        <button class="btn btn-outline btn-sm" id="prevStepBtn" onclick="modalPrevStep()" style="visibility:hidden">Înapoi</button>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span id="modalSummaryText" style="font-size:0.82rem;color:var(--gold)">$35 • Classic Haircut</span>
+          <button class="btn btn-gold btn-sm" id="nextStepBtn" onclick="modalNextStep()">Continuă</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MY APPOINTMENTS MODAL ═══════════════════ -->
+  <div class="modal-overlay" id="myAppointmentsModal">
+    <div class="booking-modal-box" style="max-width:540px">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i data-lucide="calendar-check" style="width:20px;height:20px;color:var(--gold)"></i>
+          <h3>Programările Tale Active</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeMyAppointments()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="appointmentsList" class="appointments-list">
+          <!-- Populated dynamically via js/app.js -->
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:flex-end">
+        <button class="btn btn-gold btn-sm" onclick="closeMyAppointments(); openBookingModal();">Rezervă Altă Programare</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fade & Blade — Admin & Barber Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Admin Stylesheet -->
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════ 1. LOGIN VIEW ═══════════════════ -->
+  <div class="login-container" id="loginView">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo">
+          <i data-lucide="scissors" style="width:24px;height:24px;color:var(--gold)"></i>
+          FADE <span>&</span> BLADE
+        </div>
+        <p>Portal Securizat Gestionare Frizerie & Programări</p>
+      </div>
+
+      <div class="login-error" id="loginError"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Utilizator Frizer</label>
+          <input type="text" id="username" class="form-control" placeholder="Introdu user (ex: 1, 2 sau 3)" required autofocus />
+        </div>
+        <div class="form-group">
+          <label for="password">Parolă</label>
+          <input type="password" id="password" class="form-control" placeholder="Introdu parola" required />
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top:10px">Autentificare în Panou</button>
+      </form>
+
+      <div class="quick-logins">
+        <p>Autentificare Rapidă cu 1-Click:</p>
+        <div class="quick-login-grid">
+          <button class="quick-login-btn" onclick="quickLogin('1')">
+            <strong style="color:var(--gold)">User 1</strong><br/>
+            Marcus R.
+          </button>
+          <button class="quick-login-btn" onclick="quickLogin('2')">
+            <strong style="color:var(--gold)">User 2</strong><br/>
+            Jake T.
+          </button>
+          <button class="quick-login-btn" onclick="quickLogin('3')">
+            <strong style="color:var(--gold)">User 3</strong><br/>
+            D'Angelo B.
+          </button>
+        </div>
+        <div style="text-align:center;margin-top:16px">
+          <a href="../" style="font-size:0.75rem;color:#78716c;display:inline-flex;align-items:center;gap:4px">
+            <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
+            Înapoi pe site-ul principal
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 2. ADMIN DASHBOARD VIEW ═══════════════════ -->
+  <div class="admin-app" id="adminView">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="admin-brand">
+        <a href="../" class="logo">
+          <i data-lucide="scissors" style="width:20px;height:20px;color:var(--gold)"></i>
+          FADE <span>&</span> BLADE
+        </a>
+        <span class="admin-badge">Admin Portal</span>
+      </div>
+
+      <div class="admin-user-profile">
+        <div class="barber-avatar-sm">
+          <img id="activeBarberAvatar" src="" alt="Avatar Frizer" />
+        </div>
+        <div class="barber-name-info">
+          <h4 id="activeBarberName">Marcus Rivera</h4>
+          <p id="activeBarberRole">Master Barber</p>
+        </div>
+        <a href="../" target="_blank" class="btn-header-action" title="Vizualizează site-ul în tab nou">
+          <i data-lucide="external-link" style="width:14px;height:14px"></i>
+          <span>Vezi Site</span>
+        </a>
+        <button class="btn-header-action" onclick="logout()" title="Ieșire din cont">
+          <i data-lucide="log-out" style="width:14px;height:14px"></i>
+          <span>Ieșire</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="admin-nav">
+      <button class="nav-tab-btn active" data-tab="tabAppointments">
+        <i data-lucide="calendar" style="width:16px;height:16px"></i>
+        <span>Programări & Clienți</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="tabGallery">
+        <i data-lucide="image" style="width:16px;height:16px"></i>
+        <span>Gestionare Galerie Foto</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="tabSchedule">
+        <i data-lucide="clock" style="width:16px;height:16px"></i>
+        <span>Blocare Ore & Pauze</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="tabServices">
+        <i data-lucide="scissors" style="width:16px;height:16px"></i>
+        <span>Prețuri & Servicii</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      
+      <!-- ── TAB 1: PROGRAMĂRI ────────────────────────────── -->
+      <section class="tab-pane active" id="tabAppointments">
+        <!-- KPI Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h5>Programări Astăzi</h5>
+              <div class="stat-value" id="statTodayCount">0</div>
+            </div>
+            <div class="stat-icon"><i data-lucide="calendar"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h5>Încasări Estimate Astăzi</h5>
+              <div class="stat-value" id="statTodayRevenue">$0</div>
+            </div>
+            <div class="stat-icon"><i data-lucide="dollar-sign"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h5>Programări Active</h5>
+              <div class="stat-value" id="statActiveBookings">0</div>
+            </div>
+            <div class="stat-icon"><i data-lucide="user-check"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h5>Total Istoric Clienți</h5>
+              <div class="stat-value" id="statTotalClients">0</div>
+            </div>
+            <div class="stat-icon"><i data-lucide="users"></i></div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="admin-toolbar">
+          <div class="toolbar-filters">
+            <select class="filter-select" id="barberFilter">
+              <option value="all">Toți Frizerii</option>
+              <option value="Marcus Rivera">Marcus Rivera</option>
+              <option value="Jake Thompson">Jake Thompson</option>
+              <option value="D'Angelo Brooks">D'Angelo Brooks</option>
+            </select>
+
+            <select class="filter-select" id="dateFilter">
+              <option value="all">Toate Datele</option>
+              <option value="today">Doar Astăzi</option>
+              <option value="tomorrow">Doar Mâine</option>
+            </select>
+
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="appointmentSearch" placeholder="Caută client, telefon, cod..." />
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn-header-action" onclick="openWalkInModal()">
+              <i data-lucide="plus-circle" style="width:16px;height:16px;color:var(--gold)"></i>
+              <span>Adaugă Walk-in Manual</span>
+            </button>
+            <button class="btn-header-action" onclick="exportAppointmentsCSV()" title="Exportă tabelul în format Excel/CSV">
+              <i data-lucide="download" style="width:16px;height:16px"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Appointments Table -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Cod</th>
+                  <th>Client</th>
+                  <th>Serviciu</th>
+                  <th>Frizer</th>
+                  <th>Data & Ora</th>
+                  <th>Status</th>
+                  <th>Acțiuni</th>
+                </tr>
+              </thead>
+              <tbody id="appointmentsTbody">
+                <!-- Rendered dynamically via js/admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TAB 2: GESTIONARE GALERIE FOTO ──────────────── -->
+      <section class="tab-pane" id="tabGallery">
+        <div class="admin-toolbar">
+          <div>
+            <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff;margin-bottom:4px">Portofoliu Frizerie</h3>
+            <p style="font-size:0.82rem;color:#8c857f">Adaugă noi tunsori sau editează fotografiile existente. Orice modificare este vizibilă imediat pe site-ul public.</p>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-primary" style="padding:10px 18px" onclick="openAddPhotoModal()">
+              <i data-lucide="plus" style="width:16px;height:16px;display:inline-block;vertical-align:middle"></i>
+              Adaugă Fotografie Nouă
+            </button>
+            <button class="btn-header-action" onclick="resetDefaultGallery()">
+              <i data-lucide="rotate-ccw" style="width:14px;height:14px"></i>
+              Resetează Galeria Inițială
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-gallery-grid" id="adminGalleryGrid">
+          <!-- Rendered dynamically via js/admin.js -->
+        </div>
+      </section>
+
+      <!-- ── TAB 3: BLOCARE ORE & PAUZE ───────────────────── -->
+      <section class="tab-pane" id="tabSchedule">
+        <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:28px">
+          <div style="background:var(--bg-card);border:1px solid var(--border);padding:24px;border-radius:4px">
+            <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:16px">Blochează un Interval Orar</h4>
+            <p style="font-size:0.82rem;color:#8c857f;margin-bottom:20px">Dacă ai o pauză sau ești indisponibil, blochează ora aici. Clienții nu vor putea rezerva acea oră pe site.</p>
+            
+            <div class="form-group">
+              <label for="blockBarber">Frizer</label>
+              <select id="blockBarber" class="form-control">
+                <option value="Marcus Rivera">Marcus Rivera</option>
+                <option value="Jake Thompson">Jake Thompson</option>
+                <option value="D'Angelo Brooks">D'Angelo Brooks</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="blockDate">Data</label>
+              <input type="date" id="blockDate" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="blockSlot">Ora care devine indisponibilă</label>
+              <select id="blockSlot" class="form-control">
+                <option value="09:00 AM">09:00 AM</option>
+                <option value="10:00 AM">10:00 AM</option>
+                <option value="11:00 AM">11:00 AM</option>
+                <option value="12:00 PM">12:00 PM</option>
+                <option value="01:00 PM">01:00 PM</option>
+                <option value="02:00 PM">02:00 PM</option>
+                <option value="03:00 PM">03:00 PM</option>
+                <option value="04:00 PM">04:00 PM</option>
+                <option value="05:00 PM">05:00 PM</option>
+                <option value="06:00 PM">06:00 PM</option>
+                <option value="07:00 PM">07:00 PM</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="blockReason">Motiv (opțional)</label>
+              <input type="text" id="blockReason" class="form-control" placeholder="ex: Pauză masă, ședință, urgență" />
+            </div>
+            <button class="btn-primary" onclick="blockNewSlot()">Blochează Ora</button>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border);padding:24px;border-radius:4px">
+            <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:16px">Ore Blocate Activ</h4>
+            <div id="blockedSlotsList">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TAB 4: PREȚURI & SERVICII ───────────────────── -->
+      <section class="tab-pane" id="tabServices">
+        <div style="background:var(--bg-card);border:1px solid var(--border);padding:24px;border-radius:4px;max-width:800px">
+          <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#fff;margin-bottom:8px">Meniu & Tarife Frizerie</h4>
+          <p style="font-size:0.82rem;color:#8c857f;margin-bottom:24px">Tarifele actuale configurate în sistem pentru fiecare serviciu.</p>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">Classic Haircut</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Spălat, tuns foarfecă & mașină, styling (45 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$35</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">Signature Skin Fade</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Pierdut la piele cu shaver foil & contur brici (50 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$40</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">Royal Hot Towel Shave</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Brici clasic, prosoape fierbinți cu eucalipt & loțiuni (30 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$30</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">Beard Sculpting & Trim</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Arhitectură barbă, contur pomeți & tratament ulei (25 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$25</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">The Royal Treatment</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Tuns + Fade + Bărbierit Tradițional + Barbă + Mască Argilă (90 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$85</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#141210;border:1px solid var(--border);border-radius:4px">
+              <div>
+                <strong style="color:#fff">Freestyle Hair Art & Color</strong>
+                <p style="font-size:0.75rem;color:#8c857f">Desene geometrice ras, decolorare sau nuanțare barbă (60 min)</p>
+              </div>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--gold)">$55</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════════ MODAL: ADĂUGARE WALK-IN MANUAL ═══════════════════ -->
+  <div class="admin-modal" id="walkInModal">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h3>Adaugă Programare Walk-in (Manual)</h3>
+        <button class="btn-action-icon" onclick="closeWalkInModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="admin-modal-body">
+        <div class="form-group">
+          <label for="walkInName">Nume & Prenume Client</label>
+          <input type="text" id="walkInName" class="form-control" placeholder="ex: Andrei Moraru" required />
+        </div>
+        <div class="form-group">
+          <label for="walkInPhone">Telefon Client</label>
+          <input type="tel" id="walkInPhone" class="form-control" placeholder="(555) 000-0000" />
+        </div>
+        <div class="form-group">
+          <label for="walkInService">Serviciu Solicitat</label>
+          <select id="walkInService" class="form-control">
+            <option value="Classic Haircut|35">Classic Haircut — $35</option>
+            <option value="Signature Skin Fade|40">Signature Skin Fade — $40</option>
+            <option value="Royal Hot Towel Shave|30">Royal Hot Towel Shave — $30</option>
+            <option value="Beard Sculpting & Trim|25">Beard Sculpting & Trim — $25</option>
+            <option value="The Royal Treatment|85">The Royal Treatment — $85</option>
+            <option value="Freestyle Hair Art & Color|55">Freestyle Hair Art & Color — $55</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="walkInBarber">Frizer Alocat</label>
+          <select id="walkInBarber" class="form-control">
+            <option value="Marcus Rivera">Marcus Rivera</option>
+            <option value="Jake Thompson">Jake Thompson</option>
+            <option value="D'Angelo Brooks">D'Angelo Brooks</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label for="walkInDate">Data</label>
+            <input type="date" id="walkInDate" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="walkInSlot">Ora Scaunului</label>
+            <select id="walkInSlot" class="form-control">
+              <option value="09:00 AM">09:00 AM</option>
+              <option value="10:00 AM">10:00 AM</option>
+              <option value="11:00 AM">11:00 AM</option>
+              <option value="12:00 PM">12:00 PM</option>
+              <option value="01:00 PM">01:00 PM</option>
+              <option value="02:00 PM">02:00 PM</option>
+              <option value="03:00 PM">03:00 PM</option>
+              <option value="04:00 PM">04:00 PM</option>
+              <option value="05:00 PM">05:00 PM</option>
+              <option value="06:00 PM">06:00 PM</option>
+              <option value="07:00 PM">07:00 PM</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="walkInNotes">Observații / Preferințe</label>
+          <input type="text" id="walkInNotes" class="form-control" placeholder="ex: Client fidel, preferă cafea neagră" />
+        </div>
+      </div>
+      <div class="admin-modal-footer">
+        <button class="btn-header-action" onclick="closeWalkInModal()">Anulează</button>
+        <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="saveWalkInBooking()">Salvează & Ocupă Ora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MODAL: ADĂUGARE / EDITARE FOTO ═══════════════════ -->
+  <div class="admin-modal" id="photoModal">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h3 id="photoModalTitle">Adaugă Fotografie Nouă în Galerie</h3>
+        <button class="btn-action-icon" onclick="closePhotoModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="admin-modal-body">
+        <div class="form-group">
+          <label for="photoTitle">Titlu Stil / Tunsoare</label>
+          <input type="text" id="photoTitle" class="form-control" placeholder="ex: Low Taper Fade cu Vârfuri Texturate" required />
+        </div>
+        <div class="form-group">
+          <label for="photoUrl">URL Imagine HD (Unsplash / CDN)</label>
+          <input type="url" id="photoUrl" class="form-control" placeholder="https://images.unsplash.com/..." oninput="previewPhotoUrl()" required />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label for="photoCategory">Categorie</label>
+            <select id="photoCategory" class="form-control">
+              <option value="fade">Skin Fades</option>
+              <option value="beard">Beard Sculpting</option>
+              <option value="classic">Classic Cuts</option>
+              <option value="modern">Modern Art & Color</option>
+              <option value="shop">Shop Vibe</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="photoBarber">Autor / Frizer</label>
+            <select id="photoBarber" class="form-control">
+              <option value="Marcus Rivera">Marcus Rivera</option>
+              <option value="Jake Thompson">Jake Thompson</option>
+              <option value="D'Angelo Brooks">D'Angelo Brooks</option>
+              <option value="Fade & Blade">Fade & Blade Studio</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="photoPreviewWrap" style="display:none;margin-top:12px">
+          <label style="font-size:0.75rem;color:#8c857f;text-transform:uppercase">Previzualizare Imagine:</label>
+          <div style="width:100%;height:220px;border-radius:4px;overflow:hidden;margin-top:6px;border:1px solid var(--border)">
+            <img id="photoPreview" src="" alt="Previzualizare" style="width:100%;height:100%;object-fit:cover" />
+          </div>
+        </div>
+      </div>
+      <div class="admin-modal-footer">
+        <button class="btn-header-action" onclick="closePhotoModal()">Anulează</button>
+        <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="savePhoto()">Salvează Fotografia</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Controller Script -->
+  <script src="../js/admin.js"></script>
+</body>
+</html>
